@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Life RPG">
+<title>Life RPG</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: monospace; background: #f5f5f5; color: #222; font-size: 14px; }
+  #app { max-width: 640px; margin: 0 auto; padding: 12px; padding-bottom: 40px; }
+
+  .card { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 14px; margin-bottom: 10px; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+  .player-name { font-weight: 700; font-size: 16px; }
+  .gold { font-weight: 700; color: #a07800; font-size: 15px; }
+  .xp-bar-wrap { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+  .xp-bar { height: 100%; background: #444; border-radius: 4px; transition: width 0.5s; }
+  .xp-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .stats-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .stat-box { border: 1px solid #ccc; border-radius: 5px; padding: 6px 10px; text-align: center; min-width: 62px; flex: 1; }
+  .stat-key { font-size: 10px; color: #888; }
+  .stat-val { font-size: 20px; font-weight: 700; }
+  .stat-name { font-size: 9px; color: #aaa; }
+
+  .tier-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; border: 1px solid; letter-spacing: 0.5px; }
+  .next-tier-hint { font-size: 10px; color: #aaa; margin-bottom: 5px; }
+
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tab-btn { padding: 6px 10px; font-size: 12px; font-family: monospace; border-radius: 4px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  .tab-btn.active { background: #333; color: #fff; border-color: #333; }
+
+  .section-desc { font-size: 12px; color: #666; margin-bottom: 12px; line-height: 1.6; }
+  .reset-note { font-size: 11px; color: #888; margin-bottom: 8px; }
+  .pool-info { font-size: 11px; color: #666; margin-bottom: 10px; padding: 6px 10px; background: #f8f8f8; border-radius: 4px; border: 1px solid #eee; }
+
+  .quest { border-bottom: 1px solid #eee; padding: 12px 0; }
+  .quest:last-child { border-bottom: none; }
+  .quest.done { opacity: 0.4; }
+  .quest-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .quest-left { flex: 1; }
+  .quest-title { font-weight: 600; font-size: 13px; }
+  .quest.done .quest-title { text-decoration: line-through; }
+  .quest-desc { font-size: 12px; color: #555; margin: 4px 0 6px; line-height: 1.5; }
+  .quest-rewards { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .tag-gold { font-size: 11px; color: #a07800; font-weight: 600; }
+  .tag-xp   { font-size: 11px; color: #555; }
+  .tag-stat { font-size: 11px; color: #666; }
+  .badge { font-size: 10px; border: 1px solid; padding: 1px 6px; border-radius: 3px; display: inline-block; margin-right: 4px; }
+  .badge-easy      { color: #2d7a2d; border-color: #2d7a2d; }
+  .badge-medium    { color: #a07800; border-color: #a07800; }
+  .badge-hard      { color: #c0392b; border-color: #c0392b; }
+  .badge-epic      { color: #7b3fcf; border-color: #7b3fcf; }
+  .badge-legendary { color: #8B6914; border-color: #8B6914; }
+  .quest-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 3px; }
+  .quest-dur { font-size: 11px; color: #999; }
+  .quest-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; min-width: 60px; }
+  .check { font-size: 18px; }
+
+  /* Locked quests */
+  .locked-section-label { font-size: 12px; font-weight: 600; color: #bbb; margin: 14px 0 8px; padding-top: 14px; border-top: 1px solid #eee; }
+  .locked-quest-row { border-bottom: 1px solid #f5f5f5; padding: 8px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; opacity: 0.5; }
+  .locked-quest-row:last-child { border-bottom: none; }
+  .lock-label { font-size: 11px; color: #bbb; white-space: nowrap; }
+
+  .btn { padding: 6px 14px; font-size: 12px; font-family: monospace; border-radius: 4px; border: 1px solid #999; background: #fff; cursor: pointer; white-space: nowrap; }
+  .btn:hover:not(:disabled) { background: #f0f0f0; }
+  .btn:disabled { color: #bbb; border-color: #ddd; cursor: not-allowed; background: #fafafa; }
+  .btn-sm { padding: 4px 8px; font-size: 11px; color: #c0392b; border-color: #c0392b; }
+  .btn-sm:hover { background: #fff0f0; }
+  .btn-primary { background: #333; color: #fff; border-color: #333; }
+  .btn-primary:hover:not(:disabled) { background: #555; }
+  .btn-primary:disabled { background: #ccc; border-color: #ccc; }
+
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 400px) { .shop-grid { grid-template-columns: 1fr; } }
+  .shop-item { border: 1px solid #ddd; border-radius: 6px; padding: 10px; }
+  .shop-item.cant-afford { background: #fafafa; }
+  .shop-item.tier-locked { opacity: 0.5; background: #fafafa; }
+  .shop-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+  .shop-title { font-weight: 600; font-size: 12px; margin-bottom: 3px; }
+  .shop-desc  { font-size: 11px; color: #777; line-height: 1.4; }
+  .shop-cost  { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .cost-ok { color: #a07800; }
+  .cost-no { color: #ccc; }
+  .shop-right { text-align: right; }
+  .shop-count { font-size: 10px; color: #aaa; margin-top: 2px; }
+  .shop-lock  { font-size: 10px; color: #c0392b; margin-top: 2px; }
+
+  .stat-full { margin-bottom: 14px; }
+  .stat-full-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .stat-bar-wrap { height: 7px; background: #eee; border-radius: 3px; overflow: hidden; }
+  .stat-bar { height: 100%; background: #444; border-radius: 3px; transition: width 0.5s; }
+  .lifetime { border-top: 1px solid #eee; padding-top: 14px; margin-top: 14px; }
+  .lrow { font-size: 13px; color: #555; margin-bottom: 5px; }
+
+  /* Brackets */
+  .brackets-section { border-top: 1px solid #eee; padding-top: 14px; margin-top: 14px; }
+  .bracket-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .bracket-row:last-child { border-bottom: none; }
+  .bracket-emoji { font-size: 18px; width: 26px; text-align: center; padding-top: 1px; }
+  .bracket-info { flex: 1; }
+  .bracket-name { font-size: 13px; font-weight: 700; }
+  .bracket-req { font-size: 11px; color: #888; margin-top: 1px; }
+  .bracket-unlocks { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.6; }
+  .bracket-status { font-size: 11px; font-weight: 600; white-space: nowrap; padding-top: 2px; }
+
+  .log-entry { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; gap: 10px; }
+  .log-time  { font-size: 11px; color: #aaa; white-space: nowrap; }
+  .log-msg   { font-size: 12px; }
+  .empty-msg { font-size: 13px; color: #aaa; }
+
+  .form-group { margin-bottom: 12px; }
+  label.flabel { font-size: 12px; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+  .finput { width: 100%; padding: 8px 10px; font-size: 13px; font-family: monospace; border: 1px solid #ccc; border-radius: 4px; color: #222; background: #fff; }
+  .finput:focus { outline: none; border-color: #888; }
+  textarea.finput { resize: vertical; min-height: 58px; }
+  .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 400px) { .frow { grid-template-columns: 1fr; } }
+  .stat-checks { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .stat-chk { display: flex; align-items: center; gap: 3px; font-size: 12px; cursor: pointer; }
+  .stat-num { width: 42px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; padding: 2px 4px; }
+  .section-sep { border-top: 1px solid #eee; padding-top: 14px; margin-top: 16px; }
+  .sec-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+
+  .ai-note { font-size: 11px; color: #888; margin-top: 5px; line-height: 1.5; }
+  .ai-note a { color: #555; }
+  .ai-err { font-size: 12px; color: #c0392b; margin-top: 8px; }
+  .gen-quest { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-bottom: 8px; background: #fafafa; }
+  .gen-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+  .gen-desc  { font-size: 12px; color: #555; margin-bottom: 7px; line-height: 1.4; }
+  .gen-meta  { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .gen-actions { display: flex; gap: 6px; }
+  .gen-list-label { font-size: 12px; color: #555; margin: 12px 0 8px; }
+
+  #toast { position: fixed; top: 14px; right: 14px; z-index: 999; max-width: 260px; pointer-events: none; }
+  .toast-item { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; font-family: monospace; box-shadow: 0 2px 12px rgba(0,0,0,0.12); animation: toastIn 0.25s ease; }
+  .toast-ttl { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .toast-bdy { font-size: 12px; color: #555; }
+  @keyframes toastIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div id="app"></div>
+<script>
+
+// ── TIERS ────────────────────────────────────────────────────────────────────
+const TIERS = [
+  { level:1,  name:"Novice",     emoji:"🪨", color:"#888",    slots:3, shopTier:1,
+    unlocks:["3 daily quest slots","Basic shop rewards","Foundation epics"] },
+  { level:5,  name:"Apprentice", emoji:"🔰", color:"#2d7a2d", slots:4, shopTier:2,
+    unlocks:["4 daily quest slots","Hard difficulty dailies","Mid-tier shop rewards","New epic quests"] },
+  { level:10, name:"Journeyman", emoji:"⚔️", color:"#a07800", slots:5, shopTier:3,
+    unlocks:["5 daily quest slots","Expert difficulty dailies","High-tier shop rewards","Advanced epics"] },
+  { level:20, name:"Expert",     emoji:"🏆", color:"#c0392b", slots:5, shopTier:4,
+    unlocks:["Master difficulty dailies","Premium shop rewards","Legendary-tier epics"] },
+  { level:35, name:"Master",     emoji:"👑", color:"#7b3fcf", slots:6, shopTier:5,
+    unlocks:["6 daily quest slots","Elite shop rewards","Master epics"] },
+  { level:50, name:"Legend",     emoji:"⭐", color:"#8B6914", slots:7, shopTier:6,
+    unlocks:["7 daily quest slots","Full access to all content","Legend status"] },
+];
+
+// ── STAT METADATA ────────────────────────────────────────────────────────────
+const SMETA = {
+  INT:{ label:"Intellect",  desc:"Learning & skill acquisition" },
+  WIS:{ label:"Wisdom",     desc:"Mental clarity & mindset" },
+  CRE:{ label:"Creativity", desc:"Creative output & ideas" },
+  GLD:{ label:"Grind",      desc:"Work ethic & career hustle" },
+};
+
+// ── DAILY QUEST POOL (42 quests) ─────────────────────────────────────────────
+// minTier: 1=Novice, 2=Apprentice(5+), 3=Journeyman(10+), 4=Expert(20+)
+const DAILY_POOL = [
+  // ── Easy ── minTier 1
+  { id:"p1",  title:"Read for 20 min",                desc:"A real book. Timer set, phone face-down on the other side of the room. No skimming.",          gold:35,  xp:45,  stats:{INT:2},        diff:"Easy",   minTier:1 },
+  { id:"p2",  title:"Gratitude journal",              desc:"Write 3 things you're genuinely grateful for — each needs a specific, honest reason. No vague answers.",  gold:30, xp:40, stats:{WIS:3}, diff:"Easy", minTier:1 },
+  { id:"p3",  title:"Drink 2L of water",              desc:"Track every glass. Finish before 9pm. Coffee does not count.",                                 gold:25,  xp:35,  stats:{WIS:2},        diff:"Easy",   minTier:1 },
+  { id:"p4",  title:"15-min walk, no audio",          desc:"Go outside. No podcast, no music. Walk and think. Notice three things you've never noticed.",   gold:30,  xp:40,  stats:{WIS:2},        diff:"Easy",   minTier:1 },
+  { id:"p5",  title:"Full workspace reset",           desc:"Clear your entire desk. Wipe it down. Put back only what you need today. Zero clutter.",        gold:25,  xp:35,  stats:{GLD:2},        diff:"Easy",   minTier:1 },
+  { id:"p6",  title:"Plan tomorrow in writing",       desc:"Your 3 non-negotiable priorities for tomorrow. Specific enough that you can't wiggle out.",      gold:30,  xp:40,  stats:{GLD:2,WIS:1},  diff:"Easy",   minTier:1 },
+  { id:"p7",  title:"200-word stream of consciousness","desc":"Write without stopping — goals, fears, ideas, whatever. No editing, no re-reading until done.",  gold:30,  xp:45,  stats:{CRE:2,WIS:2},  diff:"Easy",   minTier:1 },
+  { id:"p8",  title:"Reach out to someone real",      desc:"Not a like or a reaction. An actual message to a friend, mentor, or contact you respect.",      gold:30,  xp:40,  stats:{GLD:2},        diff:"Easy",   minTier:1 },
+  { id:"p9",  title:"No junk food today",             desc:"Whole foods only. If the ingredient list has more than 5 items, it doesn't pass.",              gold:35,  xp:45,  stats:{WIS:3},        diff:"Easy",   minTier:1 },
+  { id:"p10", title:"Learn for 30 min",               desc:"A course, tutorial, or book chapter. Not a rabbit hole — a structured lesson with real content.",gold:40,  xp:50,  stats:{INT:3},        diff:"Easy",   minTier:1 },
+
+  // ── Medium ── minTier 1
+  { id:"p11", title:"45-min focused study session",   desc:"One topic, one resource, phone off. Take real notes. At the end, explain back what you learned.",gold:55,  xp:65,  stats:{INT:4},        diff:"Medium", minTier:1 },
+  { id:"p12", title:"90-min craft session",           desc:"Build, create, or practice your main skill. No checking messages. Produce something tangible.",  gold:65,  xp:75,  stats:{CRE:3,GLD:2},  diff:"Medium", minTier:1 },
+  { id:"p13", title:"Write a 1-page lesson summary",  desc:"Something you learned this week, taught back in your own words. Structured and clear.",         gold:55,  xp:65,  stats:{INT:3,WIS:2},  diff:"Medium", minTier:1 },
+  { id:"p14", title:"Zero social media today",        desc:"All day. Feeds, reels, stories, news — completely off. Use the time for something that matters.",gold:60,  xp:70,  stats:{WIS:4},        diff:"Medium", minTier:1 },
+  { id:"p15", title:"Diagnose one bad habit",         desc:"Write what it costs you, what triggers it, and one specific replacement behavior to test.",     gold:55,  xp:65,  stats:{WIS:4},        diff:"Medium", minTier:1 },
+  { id:"p16", title:"Create a real draft",            desc:"A rough first version of something — an outline, sketch, prototype, or script. Actual output.",  gold:60,  xp:70,  stats:{CRE:4},        diff:"Medium", minTier:1 },
+  { id:"p17", title:"Track every purchase today",     desc:"Log every transaction with real amounts. Categorize at the end. What surprised you most?",      gold:50,  xp:60,  stats:{GLD:3,WIS:2},  diff:"Medium", minTier:1 },
+  { id:"p18", title:"Full brain dump + sort",         desc:"Write every task, idea, worry, and want from your head. Then sort by urgency and importance.",   gold:50,  xp:60,  stats:{WIS:3,INT:2},  diff:"Medium", minTier:1 },
+  { id:"p19", title:"Teach someone something",        desc:"Explain a real concept to another person — out loud, not a text. Real conversation only.",       gold:55,  xp:65,  stats:{INT:3,WIS:2},  diff:"Medium", minTier:1 },
+  { id:"p20", title:"Industry reading for 30 min",    desc:"Articles or a book specifically about your field. Write one concrete takeaway at the end.",     gold:55,  xp:65,  stats:{INT:4,GLD:1},  diff:"Medium", minTier:1 },
+
+  // ── Hard ── minTier 2 (Apprentice, level 5+)
+  { id:"p21", title:"2-hr deep work block",           desc:"One task, phone off, no switching, no music. Produce something real by the end. No half-sessions.", gold:90, xp:100, stats:{GLD:4,INT:2}, diff:"Hard", minTier:2 },
+  { id:"p22", title:"Apply to 3 real opportunities",  desc:"Jobs, clients, grants, collabs — actual applications with custom messages. No saving for later.",gold:85,  xp:95,  stats:{GLD:5},        diff:"Hard",   minTier:2 },
+  { id:"p23", title:"Learn + document a concept",     desc:"Learn something from scratch. Write 300+ words explaining it as if teaching a complete beginner.",gold:90,  xp:100, stats:{INT:5,WIS:2},  diff:"Hard",   minTier:2 },
+  { id:"p24", title:"Ship one thing today",           desc:"A feature, post, or update — finished and live. Not a draft, not almost done. Done and visible.",gold:95,  xp:110, stats:{GLD:4,CRE:3},  diff:"Hard",   minTier:2 },
+  { id:"p25", title:"Have the hard conversation",     desc:"The thing you've been avoiding saying. Today, in person or by call — not a text, not tomorrow.",gold:90,  xp:100, stats:{WIS:5},        diff:"Hard",   minTier:2 },
+  { id:"p26", title:"3 hrs of deliberate practice",   desc:"Push to the edge of your ability — not comfort zone repetition. Focus only on what you can't do yet.", gold:100, xp:110, stats:{CRE:4,GLD:3}, diff:"Hard", minTier:2 },
+  { id:"p27", title:"Write a 500-word essay",         desc:"Something you believe, have learned, or figured out. No fluff, no hedging. Say the actual thing.", gold:85, xp:95, stats:{CRE:4,INT:3},  diff:"Hard",   minTier:2 },
+  { id:"p28", title:"Zero complaints day",            desc:"Not one complaint — out loud or internal. Every impulse redirected to action or acceptance. All day.", gold:80, xp:90, stats:{WIS:5}, diff:"Hard", minTier:2 },
+  { id:"p29", title:"Kill one time-waster",           desc:"Find something you do every day that wastes time. Automate it, block it, or cut it. Write the plan.", gold:85, xp:95, stats:{GLD:4,WIS:3}, diff:"Hard", minTier:2 },
+  { id:"p30", title:"Cold outreach × 5",              desc:"Message 5 people you don't know in your field. Specific, genuine, no pitch. Real curiosity only.",gold:90,  xp:100, stats:{GLD:5},        diff:"Hard",   minTier:2 },
+
+  // ── Expert dailies ── minTier 3 (Journeyman, level 10+)
+  { id:"p31", title:"4-hr project sprint",            desc:"Your most important long-term goal gets 4 hours. Airplane mode, no exceptions. Real output only.", gold:130, xp:140, stats:{GLD:5,INT:4}, diff:"Hard", minTier:3 },
+  { id:"p32", title:"Publish something",              desc:"Written, edited, and live — a post, article, or thread. Not saved as a draft. Out there, now.",   gold:120, xp:130, stats:{CRE:5,GLD:4},  diff:"Hard",   minTier:3 },
+  { id:"p33", title:"Full skill gap audit",           desc:"Your top 3 skill gaps. Pick one. Write a 30-day plan with weekly milestones to close it.",        gold:110, xp:120, stats:{INT:4,WIS:4},  diff:"Hard",   minTier:3 },
+  { id:"p34", title:"Reach out to an expert",         desc:"Contact a mentor or leader in your field with one well-researched, specific question. Not generic.", gold:110, xp:120, stats:{INT:3,WIS:4}, diff:"Hard", minTier:3 },
+  { id:"p35", title:"Real portfolio update",          desc:"Add or meaningfully improve one piece in your public portfolio. Not admin changes — actual work.",  gold:120, xp:130, stats:{CRE:5,GLD:3},  diff:"Hard",   minTier:3 },
+  { id:"p36", title:"Full financial review",          desc:"Income, expenses, savings rate — written and analyzed. Identify one specific change to make today.", gold:110, xp:120, stats:{GLD:5,WIS:3}, diff:"Hard", minTier:3 },
+  { id:"p37", title:"Record yourself working",        desc:"Record 30 min of yourself working on your craft. Watch it back. Write 5 specific things to fix.",  gold:120, xp:130, stats:{CRE:4,WIS:4},  diff:"Hard",   minTier:3 },
+  { id:"p38", title:"One-day project: idea → done",   desc:"Scope something small enough to actually finish today. Execute completely. Ship before midnight.",  gold:130, xp:140, stats:{GLD:5,CRE:4},  diff:"Hard",   minTier:3 },
+
+  // ── Master dailies ── minTier 4 (Expert, level 20+)
+  { id:"p39", title:"5-hr deep work sprint",          desc:"Five hours on your highest-leverage work. Airplane mode. No context switching. Serious output.",  gold:170, xp:180, stats:{GLD:6,INT:5},  diff:"Epic",   minTier:4 },
+  { id:"p40", title:"Expertise content",              desc:"Create something that proves your expertise — write it, record it, build it. Put it out there.",   gold:160, xp:170, stats:{CRE:6,GLD:5},  diff:"Epic",   minTier:4 },
+  { id:"p41", title:"Monthly retrospective",          desc:"Full written review: wins, losses, patterns, honest lessons. No softening. What actually happened?", gold:150, xp:160, stats:{WIS:6,GLD:4}, diff:"Epic", minTier:4 },
+  { id:"p42", title:"Do the thing you fear most",     desc:"The professional action you've avoided longest. Send the email, make the call, submit the application. Today.", gold:160, xp:170, stats:{GLD:6,WIS:5}, diff:"Epic", minTier:4 },
+];
+
+// ── EPIC QUEST POOL (16 quests) ───────────────────────────────────────────────
+const EPIC_POOL = [
+  { id:"e1",  title:"Finish a full course or book",          desc:"Complete it all. Do every exercise. No skipping the last 20%.",                            gold:400,  xp:500,  stats:{INT:10,WIS:3},       diff:"Epic",      dur:"~2 weeks",  minTier:1 },
+  { id:"e2",  title:"Ship something publicly",               desc:"A project, post, or piece of work live in the world. Anything real and finished counts.",   gold:500,  xp:600,  stats:{CRE:10,GLD:5},       diff:"Epic",      dur:"~1 week",   minTier:1 },
+  { id:"e3",  title:"30-day daily quest streak",             desc:"Complete at least 1 daily quest every single day for 30 days. No missed days, no excuses.", gold:600,  xp:750,  stats:{GLD:10,WIS:10},      diff:"Legendary", dur:"30 days",   minTier:1 },
+  { id:"e4",  title:"Master a skill to usable level",        desc:"Go from zero to actively using a skill in real work — code, design, language, anything.",   gold:700,  xp:900,  stats:{INT:15,CRE:5},       diff:"Epic",      dur:"~3 weeks",  minTier:1 },
+  { id:"e5",  title:"Finish a book + write key lessons",     desc:"Read fully. Write a 1-page summary: 5 things you will actually apply, with deadlines.",     gold:400,  xp:500,  stats:{INT:8,WIS:6},        diff:"Epic",      dur:"~2 weeks",  minTier:1 },
+  { id:"e6",  title:"Write 10,000 words",                    desc:"Journal, essays, projects — cumulative over time. Only counts what you can prove you wrote.", gold:550, xp:700,  stats:{CRE:12,INT:8},       diff:"Epic",      dur:"~3 weeks",  minTier:1 },
+  { id:"e7",  title:"7-day full digital detox",              desc:"No social media, no news, no feeds — seven complete days. Replace every session with something real.", gold:500, xp:650, stats:{WIS:15}, diff:"Epic", dur:"7 days", minTier:1 },
+  { id:"e8",  title:"21-day daily reading streak",           desc:"20+ minutes of real reading every single day for 21 days. Track it. No breaks.",           gold:500,  xp:650,  stats:{INT:12,WIS:6},       diff:"Epic",      dur:"21 days",   minTier:1 },
+  { id:"e9",  title:"Generate income from a new source",     desc:"Real money — even $1 — from something new. Freelance, selling, content, anything real.",    gold:800,  xp:1000, stats:{GLD:15,INT:5},       diff:"Legendary", dur:"~1 month",  minTier:2 },
+  { id:"e10", title:"Build a portfolio with 3+ pieces",      desc:"Real work, publicly visible, representing your actual skill. No mock projects.",            gold:650,  xp:800,  stats:{CRE:12,GLD:8},       diff:"Epic",      dur:"~3 weeks",  minTier:2 },
+  { id:"e11", title:"Network with 10 people in your field",  desc:"Real conversations, not follows. Genuine, specific outreach — not automated, not mass.",    gold:550,  xp:700,  stats:{GLD:10,WIS:8},       diff:"Epic",      dur:"~1 month",  minTier:2 },
+  { id:"e12", title:"Hit a concrete measurable milestone",   desc:"Set a specific, measurable goal in your main pursuit. Hit it. Zero goal inflation allowed.", gold:750, xp:950,  stats:{GLD:12,INT:8,WIS:5}, diff:"Epic",      dur:"~1 month",  minTier:2 },
+  { id:"e13", title:"Land your first paying client",         desc:"Real money, real transaction. A client who chose you and paid you — not a favor from family.", gold:900, xp:1100, stats:{GLD:18,WIS:5},     diff:"Legendary", dur:"~1 month",  minTier:2 },
+  { id:"e14", title:"Build and launch a side project v1",    desc:"Idea to live in 30 days. Scope it small enough to finish. Ship before day 30.",             gold:900,  xp:1100, stats:{GLD:15,CRE:12},      diff:"Legendary", dur:"30 days",   minTier:3 },
+  { id:"e15", title:"90-day consistency challenge",          desc:"One important habit, 90 days, zero breaks. Define it specifically and measurably before starting.", gold:1500, xp:2000, stats:{WIS:20,GLD:15}, diff:"Legendary", dur:"90 days", minTier:3 },
+  { id:"e16", title:"Become best-in-circle at one skill",    desc:"One narrow skill. Deliberate practice until no one in your circle can match you. Prove it.", gold:1000, xp:1300, stats:{INT:18,CRE:10,GLD:10}, diff:"Legendary", dur:"~2 months", minTier:4 },
+];
+
+// ── SHOP ITEMS ────────────────────────────────────────────────────────────────
+const SHOP_ITEMS = [
+  { id:"r1",  e:"🎮", title:"1 hr gaming session",      desc:"Pure guilt-free gaming. You earned it.",               cost:50,   tier:1 },
+  { id:"r4",  e:"🍕", title:"Cheat meal",               desc:"Whatever you want. Fast food, pizza, dessert.",        cost:40,   tier:1 },
+  { id:"r2",  e:"🎮", title:"3 hr gaming session",      desc:"A proper session. Deserved.",                          cost:120,  tier:2 },
+  { id:"r5",  e:"🍔", title:"Full cheat day",           desc:"Eat whatever you want, all day.",                      cost:150,  tier:2 },
+  { id:"r6",  e:"🛍", title:"Buy something under $20",  desc:"A small treat. Something you held off on.",           cost:100,  tier:2 },
+  { id:"r3",  e:"🎮", title:"Full gaming day",          desc:"All day. No guilt. You grinded hard for this.",       cost:300,  tier:3 },
+  { id:"r9",  e:"🛋", title:"Full rest day",            desc:"Do nothing. Shows, bed, zero obligations.",            cost:120,  tier:3 },
+  { id:"r7",  e:"🛍", title:"Buy something under $50",  desc:"A real purchase — gear, a game, clothes.",            cost:250,  tier:3 },
+  { id:"r10", e:"🍻", title:"Go out (bar/restaurant)",  desc:"A night out, dinner, drinks.",                        cost:200,  tier:4 },
+  { id:"r8",  e:"💳", title:"Buy something under $150", desc:"Big purchase. Real gold for real loot.",              cost:600,  tier:4 },
+  { id:"r11", e:"🎵", title:"Concert or experience",   desc:"A real event. Something to look forward to.",          cost:500,  tier:5 },
+  { id:"r12", e:"✈",  title:"Weekend trip",            desc:"Get out of town. You grinded enough for this.",       cost:1200, tier:5 },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const BLANK = {
+  level:1, xp:0, gold:0, totalGoldEarned:0,
+  stats:{INT:5,WIS:5,CRE:5,GLD:5},
+  completedEpics:[],
+  dailyCompleted:[],
+  lastReset:null,
+  purchases:{},
+  log:[],
+  customDailyQuests:[],
+  customEpicQuests:[],
+  activeDailyIds:[],
+  poolQueue:[],
+  apiKey:"",
+};
+
+function today(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function getTierIndex(level){
+  for(let i=TIERS.length-1;i>=0;i--){ if(level>=TIERS[i].level) return i+1; }
+  return 1;
+}
+function getTier(level){ return TIERS[getTierIndex(level)-1]; }
+
+function dateSeed(){
+  const d=new Date();
+  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+}
+
+function seededShuffle(arr,seed){
+  const a=[...arr]; let s=seed>>>0;
+  for(let i=a.length-1;i>0;i--){
+    s=(Math.imul(s,1664525)+1013904223)>>>0;
+    const j=s%(i+1);
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function resetDay(s){
+  s.dailyCompleted=[];
+  s.lastReset=today();
+  const ti=getTierIndex(s.level);
+  const slots=TIERS[ti-1].slots;
+  const available=DAILY_POOL.filter(q=>q.minTier<=ti).map(q=>q.id);
+  const shuffled=seededShuffle(available,dateSeed());
+  s.activeDailyIds=shuffled.slice(0,slots);
+  s.poolQueue=shuffled.slice(slots);
+}
+
+function load(){
+  try{
+    const raw=localStorage.getItem("lifeRPG_v4");
+    if(raw){
+      const s={...BLANK,...JSON.parse(raw)};
+      if(s.lastReset!==today()) resetDay(s);
+      if(!Array.isArray(s.activeDailyIds)||!s.activeDailyIds.length) resetDay(s);
+      return s;
+    }
+    // Migrate from v3
+    const old=localStorage.getItem("lifeRPG_v3");
+    if(old){
+      const o=JSON.parse(old);
+      const s={...BLANK,
+        level:o.level||1, xp:o.xp||0, gold:o.gold||0,
+        totalGoldEarned:o.totalGoldEarned||0,
+        stats:o.stats||BLANK.stats,
+        purchases:o.purchases||{},
+        log:(o.log||[]).slice(0,30),
+      };
+      resetDay(s);
+      return s;
+    }
+    const s={...BLANK};
+    resetDay(s);
+    return s;
+  }catch(e){
+    const s={...BLANK};
+    resetDay(s);
+    return s;
+  }
+}
+function save(){ try{localStorage.setItem("lifeRPG_v4",JSON.stringify(S));}catch(e){} }
+
+let S=load();
+let TAB="quests";
+let GEN=[]; let GEN_LOADING=false; let GEN_ERR="";
+
+function xpFor(lvl){ return Math.floor(150*Math.pow(lvl,1.4)); }
+function uid(){ return "c"+Date.now()+Math.floor(Math.random()*9999); }
+
+function addLog(msg){
+  const t=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  S.log=[{id:Date.now(),msg,time:t},...S.log].slice(0,30);
+}
+
+function toast(title,body){
+  const el=document.getElementById("toast");
+  const d=document.createElement("div");
+  d.className="toast-item";
+  d.innerHTML=`<div class="toast-ttl">${title}</div><div class="toast-bdy">${body}</div>`;
+  el.appendChild(d);
+  setTimeout(()=>d.remove(),3400);
+}
+
+function applyRewards(q){
+  Object.entries(q.stats).forEach(([s,v])=>{S.stats[s]=(S.stats[s]||0)+v;});
+  S.xp+=q.xp; S.gold+=q.gold; S.totalGoldEarned+=q.gold;
+  const prevTier=getTierIndex(S.level);
+  while(S.xp>=xpFor(S.level)){S.xp-=xpFor(S.level);S.level++;}
+  const newTier=getTierIndex(S.level);
+  if(newTier>prevTier){
+    const tier=TIERS[newTier-1];
+    addLog(`BRACKET UP → ${tier.emoji} ${tier.name}!`);
+    setTimeout(()=>toast(`${tier.emoji} ${tier.name} Bracket!`,`New content unlocked. Check quests and shop.`),100);
+  } else if(S.xp<xpFor(S.level)){
+    // normal level up without bracket change — just log if level changed
+  }
+}
+
+function completeQuest(id,isDaily){
+  if(isDaily && S.dailyCompleted.includes(id)) return;
+  if(!isDaily && S.completedEpics.includes(id)) return;
+
+  let q=null;
+  const prevLevel=S.level;
+  if(isDaily){
+    q=DAILY_POOL.find(x=>x.id===id)||S.customDailyQuests.find(x=>x.id===id);
+    if(!q) return;
+    S.dailyCompleted.push(id);
+    if(DAILY_POOL.find(x=>x.id===id)){
+      S.activeDailyIds=S.activeDailyIds.filter(x=>x!==id);
+      if(Array.isArray(S.poolQueue)&&S.poolQueue.length>0){
+        const next=S.poolQueue.shift();
+        S.activeDailyIds.push(next);
+      }
+    }
+  } else {
+    q=EPIC_POOL.find(x=>x.id===id)||S.customEpicQuests.find(x=>x.id===id);
+    if(!q) return;
+    S.completedEpics.push(id);
+  }
+
+  const statStr=Object.entries(q.stats).map(([s,v])=>`+${v} ${s}`).join(" · ");
+  addLog(`Quest: "${q.title}" · +${q.gold}G · +${q.xp}XP · ${statStr}`);
+  toast("Quest Complete!",`+${q.gold}G · ${statStr}`);
+  applyRewards(q);
+  if(S.level>prevLevel){
+    addLog(`LEVEL UP → Level ${S.level}!`);
+    setTimeout(()=>toast(`⬆ Level ${S.level}!`,"Keep going. You're building something real."),200);
+  }
+  save();render();
+}
+
+function deleteQuest(id,isDaily){
+  if(!confirm("Delete this quest?")) return;
+  if(isDaily) S.customDailyQuests=S.customDailyQuests.filter(q=>q.id!==id);
+  else        S.customEpicQuests=S.customEpicQuests.filter(q=>q.id!==id);
+  save();render();
+}
+
+function buyReward(id){
+  const r=SHOP_ITEMS.find(x=>x.id===id);
+  if(!r||S.gold<r.cost) return;
+  if(r.tier>getTierIndex(S.level)) return;
+  S.gold-=r.cost;
+  S.purchases[id]=(S.purchases[id]||0)+1;
+  addLog(`Reward: "${r.title}" · -${r.cost}G`);
+  toast("Reward Unlocked!",`${r.e} ${r.title} — you earned it.`);
+  save();render();
+}
+
+function addCustomQuest(isDaily){
+  const title=document.getElementById("cq-title").value.trim();
+  const desc=document.getElementById("cq-desc").value.trim();
+  const diff=document.getElementById("cq-diff").value;
+  const dur=document.getElementById("cq-dur").value.trim();
+  if(!title){alert("Quest needs a title.");return;}
+  const stats={};
+  document.querySelectorAll(".sc:checked").forEach(cb=>{
+    const v=parseInt(document.getElementById("sv-"+cb.value).value)||2;
+    stats[cb.value]=v;
+  });
+  if(!Object.keys(stats).length){alert("Pick at least one stat bonus.");return;}
+  const goldMap={Easy:35,Medium:60,Hard:90,Epic:420,Legendary:750};
+  const xpMap  ={Easy:45,Medium:70,Hard:110,Epic:520,Legendary:950};
+  const q={id:uid(),title,desc,gold:goldMap[diff]||60,xp:xpMap[diff]||70,stats,diff,custom:true};
+  if(!isDaily&&dur) q.dur=dur;
+  if(isDaily) S.customDailyQuests.push(q); else S.customEpicQuests.push(q);
+  addLog(`New ${isDaily?"daily":"epic"} quest: "${title}"`);
+  toast("Quest Added!",`"${title}" is live.`);
+  save();TAB=isDaily?"quests":"epics";render();
+}
+
+function addGenQuest(idx,isDaily){
+  const q=GEN[idx]; if(!q) return;
+  const nq={id:uid(),title:q.title,desc:q.desc,gold:q.gold,xp:q.xp,stats:q.stats,diff:q.diff,custom:true};
+  if(!isDaily&&q.dur) nq.dur=q.dur;
+  if(isDaily) S.customDailyQuests.push(nq); else S.customEpicQuests.push(nq);
+  GEN.splice(idx,1);
+  addLog(`AI quest added: "${nq.title}"`);
+  toast("Quest Added!",`"${nq.title}" added.`);
+  save();render();
+}
+
+function dismissGen(idx){ GEN.splice(idx,1); render(); }
+
+async function generateQuests(){
+  const key=document.getElementById("ai-key").value.trim();
+  const focus=document.getElementById("ai-focus").value.trim();
+  const type=document.getElementById("ai-type").value;
+  if(!key){alert("Enter your Anthropic API key.");return;}
+  if(!focus){alert("Tell the AI what you're focused on.");return;}
+  S.apiKey=key; save();
+  GEN_LOADING=true; GEN_ERR=""; GEN=[]; render();
+  const isD=type==="daily";
+  const prompt=`You design quests for a life-RPG app where real actions level up a character.
+Player is focused on: "${focus}"
+Generate 4 ${isD?"daily (done in one day)":"epic (days or weeks)"} quests.
+Stats: INT=learning, WIS=mindset, CRE=creativity, GLD=hustle
+Difficulty: ${isD?"Easy/Medium/Hard":"Epic/Legendary"}
+Gold: Easy=30-50,Medium=55-80,Hard=85-110,Epic=350-550,Legendary=650-900
+XP: Easy=35-60,Medium=60-85,Hard=90-120,Epic=400-600,Legendary=700-1000
+Make quests specific and hard to fake. Be concrete. No vague goals.
+Return ONLY a JSON array, no markdown, no preamble:
+[{"title":"...","desc":"specific and actionable, 1-2 sentences","diff":"Medium","gold":60,"xp":70,"stats":{"INT":3},"isDaily":${isD}${!isD?',"dur":"~1 week"':""}}]`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"API error "+res.status);}
+    const data=await res.json();
+    const text=data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim();
+    GEN=JSON.parse(text);
+    GEN_LOADING=false;render();
+  }catch(e){GEN_LOADING=false;GEN_ERR=e.message||"Something went wrong.";render();}
+}
+
+// ── RENDER HELPERS ────────────────────────────────────────────────────────────
+function badge(d){
+  return`<span class="badge badge-${d.toLowerCase()}">${d}</span>`;
+}
+
+function questRow(q, done, isDaily, isCustom){
+  const stats=Object.entries(q.stats).map(([s,v])=>`<span class="tag-stat">+${v} ${s}</span>`).join(" ");
+  return`<div class="quest${done?" done":""}">
+    <div class="quest-top">
+      <div class="quest-left">
+        <div class="quest-meta">${badge(q.diff)}<span class="quest-title">${q.title}</span>${q.dur?`<span class="quest-dur">⏱ ${q.dur}</span>`:""}</div>
+        <div class="quest-desc">${q.desc}</div>
+        <div class="quest-rewards">
+          <span class="tag-gold">+${q.gold}G</span>
+          <span class="tag-xp">+${q.xp}XP</span>
+          ${stats}
+          ${isCustom?`<span style="font-size:10px;color:#bbb;border:1px solid #eee;padding:1px 5px;border-radius:3px">custom</span>`:""}
+        </div>
+      </div>
+      <div class="quest-actions">
+        ${done?`<span class="check">✓</span>`:`<button class="btn" onclick="completeQuest('${q.id}',${isDaily})">Done</button>`}
+        ${isCustom&&!done?`<button class="btn btn-sm" onclick="deleteQuest('${q.id}',${isDaily})">✕ del</button>`:""}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── RENDER HEADER ─────────────────────────────────────────────────────────────
+function renderHeader(){
+  const needed=xpFor(S.level);
+  const pct=Math.min(100,Math.round(S.xp/needed*100));
+  const tier=getTier(S.level);
+  const ti=getTierIndex(S.level);
+  const nextTier=TIERS[ti];
+  const boxes=Object.entries(SMETA).map(([k,m])=>
+    `<div class="stat-box"><div class="stat-key">${k}</div><div class="stat-val">${S.stats[k]}</div><div class="stat-name">${m.label}</div></div>`
+  ).join("");
+  const nextHint=nextTier
+    ? `Next bracket: ${nextTier.emoji} <strong>${nextTier.name}</strong> at Level ${nextTier.level} (${nextTier.level-S.level} lvl away)`
+    : `⭐ <strong>Maximum bracket reached</strong>`;
+  return`<div class="card">
+    <div class="header-top">
+      <div>
+        <span class="player-name">Player</span>
+        <span style="margin-left:10px;color:#666;font-size:13px">Level ${S.level}</span>
+        <span class="tier-badge" style="margin-left:8px;color:${tier.color};border-color:${tier.color}">${tier.emoji} ${tier.name}</span>
+      </div>
+      <span class="gold">⬡ ${S.gold}G</span>
+    </div>
+    <div class="next-tier-hint">${nextHint}</div>
+    <div class="xp-label">XP ${S.xp} / ${needed}</div>
+    <div class="xp-bar-wrap"><div class="xp-bar" style="width:${pct}%"></div></div>
+    <div class="stats-row">${boxes}</div>
+  </div>`;
+}
+
+// ── RENDER TABS ───────────────────────────────────────────────────────────────
+function renderTabs(){
+  const ti=getTierIndex(S.level);
+  const dDone=S.dailyCompleted.filter(id=>
+    S.activeDailyIds.includes(id)||S.customDailyQuests.some(q=>q.id===id)
+  ).length;
+  const dTotal=S.activeDailyIds.length+S.customDailyQuests.length;
+  const eDone=S.completedEpics.length;
+  const eTotal=EPIC_POOL.filter(q=>q.minTier<=ti).length+S.customEpicQuests.length;
+  const tabs={
+    quests:`Dailies (${dDone}/${dTotal})`,
+    epics:`Epics (${eDone}/${eTotal})`,
+    shop:"Shop",
+    create:"+ Quest",
+    stats:"Stats",
+    log:"Log"
+  };
+  return`<div class="tabs">${Object.entries(tabs).map(([k,v])=>
+    `<button class="tab-btn${TAB===k?" active":""}" onclick="go('${k}')">${v}</button>`
+  ).join("")}</div>`;
+}
+
+// ── RENDER QUESTS (DAILIES) ───────────────────────────────────────────────────
+function renderQuests(){
+  const ti=getTierIndex(S.level);
+  const tier=TIERS[ti-1];
+  const remaining=(S.poolQueue||[]).filter(id=>{
+    const q=DAILY_POOL.find(x=>x.id===id);
+    return q&&!S.dailyCompleted.includes(id);
+  }).length;
+
+  const poolRows=(S.activeDailyIds||[]).map(id=>{
+    const q=DAILY_POOL.find(x=>x.id===id);
+    if(!q) return "";
+    return questRow(q,S.dailyCompleted.includes(id),true,false);
+  }).join("");
+
+  const customRows=(S.customDailyQuests||[]).map(q=>
+    questRow(q,S.dailyCompleted.includes(q.id),true,true)
+  ).join("");
+
+  const content=poolRows+customRows||`<div class="empty-msg">No quests. Add some in + Quest.</div>`;
+
+  return`<div class="card">
+    <div class="reset-note">Daily quests reset at midnight. Complete one → a new quest replaces it from the queue.</div>
+    <div class="pool-info">${tier.emoji} ${tier.name} · ${tier.slots} active slots · ${remaining} more queued for today</div>
+    ${content}
+  </div>`;
+}
+
+// ── RENDER EPICS ──────────────────────────────────────────────────────────────
+function renderEpics(){
+  const ti=getTierIndex(S.level);
+  const available=EPIC_POOL.filter(q=>q.minTier<=ti);
+  const locked=EPIC_POOL.filter(q=>q.minTier>ti);
+
+  const availRows=available.map(q=>
+    questRow(q,S.completedEpics.includes(q.id),false,false)
+  ).join("");
+  const customRows=(S.customEpicQuests||[]).map(q=>
+    questRow(q,S.completedEpics.includes(q.id),false,true)
+  ).join("");
+  const emptyMsg=(!availRows&&!customRows)?`<div class="empty-msg">No epics yet. Add some in + Quest.</div>`:"";
+
+  const lockedBlock=locked.length?`
+    <div class="locked-section-label">🔒 Locked epics (${locked.length})</div>
+    ${locked.map(q=>{
+      const needTier=TIERS[q.minTier-1];
+      return`<div class="locked-quest-row">
+        <div style="flex:1">
+          <div class="quest-meta">${badge(q.diff)}<span class="quest-title" style="color:#bbb">${q.title}</span>${q.dur?`<span class="quest-dur">⏱ ${q.dur}</span>`:""}</div>
+          <div style="font-size:12px;color:#ccc;margin-top:3px">${q.desc}</div>
+        </div>
+        <div class="lock-label">🔒 ${needTier.emoji} Lv.${needTier.level}</div>
+      </div>`;
+    }).join("")}
+  `:"";
+
+  return`<div class="card">
+    <div class="section-desc">Epic quests take days or weeks. Big gold, big stat jumps. Mark done when you genuinely finish.</div>
+    ${emptyMsg}${availRows}${customRows}${lockedBlock}
+  </div>`;
+}
+
+// ── RENDER SHOP ───────────────────────────────────────────────────────────────
+function renderShop(){
+  const ti=getTierIndex(S.level);
+  const items=SHOP_ITEMS.map(r=>{
+    const isLocked=r.tier>ti;
+    const canAfford=S.gold>=r.cost;
+    const ok=canAfford&&!isLocked;
+    const cnt=S.purchases[r.id]||0;
+    const needTier=isLocked?TIERS[r.tier-1]:null;
+    return`<div class="shop-item${isLocked?" tier-locked":canAfford?"":" cant-afford"}">
+      <div class="shop-row">
+        <div style="flex:1">
+          <div class="shop-title">${r.e} ${r.title}</div>
+          <div class="shop-desc">${r.desc}</div>
+          ${cnt?`<div class="shop-count">Purchased ${cnt}×</div>`:""}
+          ${isLocked?`<div class="shop-lock">🔒 ${needTier.emoji} ${needTier.name} (Lv.${needTier.level})</div>`:""}
+        </div>
+        <div class="shop-right">
+          <div class="shop-cost ${ok?"cost-ok":"cost-no"}">${r.cost}G</div>
+          <button class="btn" style="margin-top:5px" ${ok?"":"disabled"} onclick="buyReward('${r.id}')">Buy</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  return`<div class="card">
+    <div style="font-weight:700;color:#a07800;margin-bottom:10px">Balance: ${S.gold}G</div>
+    <div class="section-desc">Spend gold on real-life rewards. Locked items unlock as you level up. Zero guilt.</div>
+    <div class="shop-grid">${items}</div>
+  </div>`;
+}
+
+// ── RENDER CREATE ─────────────────────────────────────────────────────────────
+function renderCreate(){
+  const statInputs=Object.entries(SMETA).map(([k,m])=>
+    `<label class="stat-chk"><input type="checkbox" class="sc" value="${k}"> ${k}</label>
+     <input type="number" id="sv-${k}" class="stat-num" value="3" min="1" max="20" title="${m.label} bonus">`
+  ).join(" ");
+
+  const genBlock=`
+    <div class="section-sep">
+      <div class="sec-title">Generate quests with AI</div>
+      <div class="section-desc">Tell the AI what you're working on. It'll write quests tailored to your life right now. Needs an Anthropic API key.</div>
+      <div class="form-group">
+        <label class="flabel">Anthropic API key</label>
+        <input class="finput" type="password" id="ai-key" value="${S.apiKey}" placeholder="sk-ant-..." autocomplete="off">
+        <div class="ai-note">Get yours free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys. Stays on your device only.</div>
+      </div>
+      <div class="form-group">
+        <label class="flabel">What are you focused on right now?</label>
+        <textarea class="finput" id="ai-focus" rows="3" placeholder="e.g. Learning Python, building freelance income, getting consistent with my creative work..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="flabel">Quest type</label>
+        <select class="finput" id="ai-type"><option value="daily">Daily quests</option><option value="epic">Epic quests</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="generateQuests()" ${GEN_LOADING?"disabled":""}>${GEN_LOADING?"Generating...":"Generate quests ↗"}</button>
+      ${GEN_ERR?`<div class="ai-err">Error: ${GEN_ERR}</div>`:""}
+      ${GEN.length?`<div class="gen-list-label">Review and add what you want:</div>${GEN.map((q,i)=>{
+        const isD=q.isDaily;
+        const st=Object.entries(q.stats||{}).map(([s,v])=>`+${v} ${s}`).join(" ");
+        return`<div class="gen-quest">
+          <div class="gen-title">${q.title}</div>
+          <div class="gen-desc">${q.desc}</div>
+          <div class="gen-meta">${badge(q.diff)}<span class="tag-gold">+${q.gold}G</span><span class="tag-xp">+${q.xp}XP</span><span class="tag-stat">${st}</span>${q.dur?`<span style="font-size:11px;color:#999">⏱ ${q.dur}</span>`:""}</div>
+          <div class="gen-actions">
+            <button class="btn btn-primary" onclick="addGenQuest(${i},${isD})">Add to ${isD?"dailies":"epics"}</button>
+            <button class="btn" onclick="dismissGen(${i})">Dismiss</button>
+          </div>
+        </div>`;
+      }).join("")}`:""}
+    </div>`;
+
+  return`<div class="card">
+    <div class="section-desc">Create your own quests. They appear immediately alongside your pool quests.</div>
+    <div class="form-group"><label class="flabel">Quest title</label><input class="finput" type="text" id="cq-title" placeholder="e.g. Record my first video"></div>
+    <div class="form-group"><label class="flabel">What exactly do you need to do?</label><textarea class="finput" id="cq-desc" placeholder="Be specific. Vague quests are easy to cheat."></textarea></div>
+    <div class="frow">
+      <div class="form-group">
+        <label class="flabel">Type</label>
+        <select class="finput" id="cq-type"><option value="daily">Daily</option><option value="epic">Epic</option></select>
+      </div>
+      <div class="form-group">
+        <label class="flabel">Difficulty</label>
+        <select class="finput" id="cq-diff"><option>Easy</option><option selected>Medium</option><option>Hard</option><option>Epic</option><option>Legendary</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="flabel">Duration (epic quests only)</label><input class="finput" type="text" id="cq-dur" placeholder="e.g. ~2 weeks"></div>
+    <div class="form-group"><label class="flabel">Stat bonuses</label><div class="stat-checks">${statInputs}</div></div>
+    <button class="btn btn-primary" onclick="addCustomQuest(document.getElementById('cq-type').value==='daily')">Add quest</button>
+    ${genBlock}
+  </div>`;
+}
+
+// ── RENDER STATS ──────────────────────────────────────────────────────────────
+function renderStats(){
+  const ti=getTierIndex(S.level);
+  const bars=Object.entries(SMETA).map(([k,m])=>{
+    const v=S.stats[k]; const pct=Math.min(100,Math.round(v/100*100));
+    return`<div class="stat-full">
+      <div class="stat-full-top">
+        <div><strong>${m.label}</strong><span style="font-size:11px;color:#888;margin-left:8px">${m.desc}</span></div>
+        <strong>${v}</strong>
+      </div>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join("");
+
+  const bracketRows=TIERS.map((t,i)=>{
+    const tierNum=i+1;
+    const isCurrent=ti===tierNum;
+    const isUnlocked=ti>tierNum;
+    const isLocked=ti<tierNum;
+    const nextT=TIERS[i+1];
+    let status="";
+    if(isCurrent){
+      status=nextT
+        ? `<span class="bracket-status" style="color:${t.color}">${nextT.level-S.level} lvl to next</span>`
+        : `<span class="bracket-status" style="color:#8B6914">MAX ⭐</span>`;
+    } else if(isUnlocked){
+      status=`<span class="bracket-status" style="color:#2d7a2d">✓ Reached</span>`;
+    } else {
+      status=`<span class="bracket-status" style="color:#ccc">Lv.${t.level}</span>`;
+    }
+    return`<div class="bracket-row" style="${isLocked?"opacity:0.45":""}">
+      <div class="bracket-emoji">${t.emoji}</div>
+      <div class="bracket-info">
+        <div class="bracket-name" style="color:${isLocked?"#ccc":t.color}">${t.name}</div>
+        <div class="bracket-req">${isLocked?"Requires Level "+t.level:isCurrent?"Current bracket":"Reached at Level "+t.level}</div>
+        <div class="bracket-unlocks">${t.unlocks.join(" · ")}</div>
+      </div>
+      ${status}
+    </div>`;
+  }).join("");
+
+  return`<div class="card">${bars}
+    <div class="lifetime">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px">Lifetime</div>
+      <div class="lrow">Total gold earned: <strong>${S.totalGoldEarned}G</strong></div>
+      <div class="lrow">Epics completed: <strong>${S.completedEpics.length}</strong></div>
+      <div class="lrow">Rewards unlocked: <strong>${Object.values(S.purchases).reduce((a,b)=>a+b,0)}</strong></div>
+      <div class="lrow">Current level: <strong>${S.level}</strong></div>
+    </div>
+    <div class="brackets-section">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px">Brackets</div>
+      ${bracketRows}
+    </div>
+  </div>`;
+}
+
+// ── RENDER LOG ────────────────────────────────────────────────────────────────
+function renderLog(){
+  const rows=S.log.length
+    ? S.log.map(e=>`<div class="log-entry"><span class="log-time">${e.time}</span><span class="log-msg">${e.msg}</span></div>`).join("")
+    : `<div class="empty-msg">Nothing yet. Complete a quest to start your story.</div>`;
+  return`<div class="card"><div class="section-desc">Everything you've done. Your story.</div>${rows}</div>`;
+}
+
+// ── MAIN ──────────────────────────────────────────────────────────────────────
+const TABS={quests:renderQuests,epics:renderEpics,shop:renderShop,create:renderCreate,stats:renderStats,log:renderLog};
+
+function render(){ document.getElementById("app").innerHTML=renderHeader()+renderTabs()+(TABS[TAB]||renderQuests)(); }
+
+window.go=t=>{TAB=t;render();};
+window.completeQuest=completeQuest;
+window.deleteQuest=deleteQuest;
+window.buyReward=buyReward;
+window.addCustomQuest=addCustomQuest;
+window.generateQuests=generateQuests;
+window.addGenQuest=addGenQuest;
+window.dismissGen=dismissGen;
+
+save();
+render();
+</script>
+</body>
+</html>
