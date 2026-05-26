@@ -5544,6 +5544,12 @@ window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _deferredInstallPrompt = e;
   render(); // re-render header to show install button
+  // If the first-run welcome is still up (or not yet shown), refresh it now that we
+  // have a real install prompt, so Android users get the one-tap Install button.
+  if(!localStorage.getItem('saga_install_welcome_seen') && !isRunningAsPWA()){
+    document.getElementById('install-welcome')?.remove();
+    maybeShowInstallWelcome();
+  }
 });
 
 window.addEventListener('appinstalled', () => {
@@ -5588,6 +5594,77 @@ window.triggerAndroidInstall = async function(){
   if(result.outcome === 'accepted') localStorage.setItem('saga_installed', '1');
   _deferredInstallPrompt = null;
   render();
+};
+
+// ── FIRST-RUN INSTALL WELCOME ─────────────────────────────────────────────────
+// Shown once, at the very start (before login), explaining that adding Saga to the
+// home screen is the best way to play — with platform-correct instructions.
+function maybeShowInstallWelcome(){
+  if(isRunningAsPWA()) return;                                  // already installed — never show
+  if(localStorage.getItem('saga_install_welcome_seen')) return; // one-time only
+  if(document.getElementById('install-welcome')) return;
+  const ios = isIOS() && isSafari();
+  const android = !ios && !!_deferredInstallPrompt; // real install prompt available
+  // Build platform-specific instructions
+  let how;
+  if(ios){
+    how = `
+      <div style="display:flex;flex-direction:column;gap:7px;margin:14px 0 4px;text-align:left">
+        <div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-muted)">
+          <span style="background:#c8922a20;border-radius:7px;padding:3px 9px;font-size:12px;font-weight:800;color:#c8922a;flex-shrink:0">1</span>
+          Tap the <strong style="color:var(--text)">Share</strong> button <span style="font-size:17px">&#x2191;</span> at the bottom of Safari</div>
+        <div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-muted)">
+          <span style="background:#c8922a20;border-radius:7px;padding:3px 9px;font-size:12px;font-weight:800;color:#c8922a;flex-shrink:0">2</span>
+          Scroll down and tap <strong style="color:var(--text)">Add to Home Screen</strong></div>
+        <div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-muted)">
+          <span style="background:#c8922a20;border-radius:7px;padding:3px 9px;font-size:12px;font-weight:800;color:#c8922a;flex-shrink:0">3</span>
+          Tap <strong style="color:var(--text)">Add</strong> &mdash; Saga lands on your home screen</div>
+      </div>`;
+  } else if(!android){
+    how = `
+      <div style="display:flex;flex-direction:column;gap:7px;margin:14px 0 4px;text-align:left">
+        <div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-muted)">
+          <span style="background:#c8922a20;border-radius:7px;padding:3px 9px;font-size:12px;font-weight:800;color:#c8922a;flex-shrink:0">1</span>
+          Open your browser&rsquo;s <strong style="color:var(--text)">menu</strong> (&#x22EE; or &#x22EF;)</div>
+        <div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-muted)">
+          <span style="background:#c8922a20;border-radius:7px;padding:3px 9px;font-size:12px;font-weight:800;color:#c8922a;flex-shrink:0">2</span>
+          Tap <strong style="color:var(--text)">Install app</strong> or <strong style="color:var(--text)">Add to Home screen</strong></div>
+      </div>`;
+  } else { how = ""; } // android with a real prompt → use the Install button instead
+
+  const cta = android
+    ? `<button onclick="_welcomeInstallNow()" style="flex:1;padding:11px;font-size:13px;font-family:'Nunito',sans-serif;font-weight:800;border-radius:11px;border:1px solid #f0c040;background:#f0c040;color:#1c1810;cursor:pointer">Install Saga</button>`
+    : `<button onclick="_dismissInstallWelcome()" style="flex:1;padding:11px;font-size:13px;font-family:'Nunito',sans-serif;font-weight:800;border-radius:11px;border:1px solid #f0c040;background:#1a1200;color:#f0c040;cursor:pointer">Got it</button>`;
+
+  const o = document.createElement('div');
+  o.id = 'install-welcome';
+  o.style.cssText = "position:fixed;inset:0;background:rgba(8,6,14,0.88);backdrop-filter:blur(3px);z-index:100000;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Nunito',sans-serif";
+  o.innerHTML = `
+    <div style="background:linear-gradient(180deg,#1c1810,#141019);border:1px solid #c8922a55;border-radius:20px;padding:24px 22px;max-width:360px;width:100%;text-align:center;box-shadow:0 12px 48px rgba(0,0,0,0.6)">
+      <img src="./icon-192.png" alt="" style="width:74px;height:74px;border-radius:18px;margin-bottom:12px;box-shadow:0 4px 18px rgba(240,192,64,0.3)" onerror="this.style.display='none'">
+      <div style="font-family:'Cinzel',serif;font-size:21px;font-weight:900;color:#f0c040;margin-bottom:6px">Welcome to Saga</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.6">For the best experience, add Saga to your home screen &mdash; it opens fullscreen like a real app, works offline, and keeps your streak reminders on time.</div>
+      ${how}
+      <div style="display:flex;gap:8px;margin-top:18px">
+        ${android?`<button onclick="_dismissInstallWelcome()" style="flex:1;padding:11px;font-size:13px;font-family:inherit;font-weight:800;border-radius:11px;border:1px solid var(--card-border);background:transparent;color:var(--text-muted);cursor:pointer">Maybe later</button>`:""}
+        ${cta}
+      </div>
+      ${android?"":`<div style="margin-top:10px"><button onclick="_dismissInstallWelcome()" style="background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;font-family:inherit">Continue in browser</button></div>`}
+    </div>`;
+  document.body.appendChild(o);
+}
+window._dismissInstallWelcome = function(){
+  localStorage.setItem('saga_install_welcome_seen','1');
+  document.getElementById('install-welcome')?.remove();
+};
+window._welcomeInstallNow = async function(){
+  localStorage.setItem('saga_install_welcome_seen','1');
+  document.getElementById('install-welcome')?.remove();
+  if(_deferredInstallPrompt){
+    _deferredInstallPrompt.prompt();
+    try{ const r=await _deferredInstallPrompt.userChoice; if(r.outcome==='accepted')localStorage.setItem('saga_installed','1'); }catch(e){}
+    _deferredInstallPrompt=null; render();
+  }
 };
 
 // Inject iOS banner into the DOM (outside the render cycle so it persists)
@@ -5652,9 +5729,12 @@ async function registerSW() {
     });
 
     // When the new SW takes control, reload once to run the fresh code.
+    // When the user taps "Update" we set this flag, then the new SW takes control
+    // and we reload ONCE to run fresh code. We must NOT reload on the very first
+    // install (when the SW first claims the page), or the splash plays twice.
     let _reloaded = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (_reloaded) return;
+      if (_reloaded || !window._SW_UPDATE_REQUESTED) return;
       _reloaded = true;
       location.reload();
     });
@@ -5685,11 +5765,15 @@ function _showUpdateBanner() {
     <button id="sw-update-btn" style="font-size:12px;font-weight:800;font-family:inherit;border:none;border-radius:8px;padding:7px 12px;background:#f0c040;color:#1c1810;cursor:pointer">Update</button>`;
   document.body.appendChild(b);
   document.getElementById('sw-update-btn').onclick = () => {
+    window._SW_UPDATE_REQUESTED = true;
     if (_swReg && _swReg.waiting) _swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
     b.remove();
   };
 }
 registerSW();
+// Show the one-time install welcome at the start (after a beat, so the
+// beforeinstallprompt event has a chance to arrive on Android first).
+setTimeout(()=>{ try{ maybeShowInstallWelcome(); }catch(e){} }, 900);
 // Re-check for a new build when the user returns to the app.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && _swReg) _swReg.update().catch(() => {});
