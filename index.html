@@ -47,29 +47,6 @@
     --nav-h: 74px;
   }
 
-  /* ── Rotate-to-landscape prompt (phones in portrait only) ────────────── */
-  #rotate-prompt{
-    position:fixed;inset:0;z-index:99999;display:none;
-    flex-direction:column;align-items:center;justify-content:center;
-    background:radial-gradient(circle at 50% 40%, #15110a, #08060c);
-    color:#f0c040;text-align:center;padding:32px;
-  }
-  #rotate-prompt .rp-phone{
-    font-size:64px;line-height:1;margin-bottom:20px;
-    animation:rpRotate 2.2s ease-in-out infinite;
-  }
-  @keyframes rpRotate{
-    0%,15%{transform:rotate(0deg)} 45%,70%{transform:rotate(-90deg)} 100%{transform:rotate(-90deg)}
-  }
-  #rotate-prompt .rp-title{font-size:20px;font-weight:900;margin-bottom:8px;color:#ffe080;font-family:'Cinzel',serif;}
-  #rotate-prompt .rp-sub{font-size:13px;color:var(--text-muted);max-width:300px;line-height:1.6;}
-  /* Show the prompt only on coarse-pointer (touch) devices in portrait. */
-  @media (orientation:portrait) and (pointer:coarse){
-    #rotate-prompt{display:flex;}
-    /* Hide the app behind the prompt so nothing peeks through */
-    #app,#bottom-nav,#tab-help-btn{visibility:hidden;}
-  }
-
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { min-height: 100vh; overflow-y: auto; }
@@ -907,13 +884,23 @@
   }
   .popup-enter-btn:hover { background: rgba(255,255,255,0.06); }
 
-  /* ── Landscape tuning (placed last so it overrides base layout) ─────── */
+  /* ── Combat-only rotate prompt: only while in an active fight + portrait ── */
+  #combat-rotate-prompt{ position:fixed; inset:0; z-index:99999; display:none;
+    flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 40%, #15110a, #08060c); color:#f0c040; text-align:center; padding:32px; }
+  #combat-rotate-prompt .crp-phone{ font-size:64px; line-height:1; margin-bottom:20px; animation:crpRotate 2.2s ease-in-out infinite; }
+  @keyframes crpRotate{ 0%,15%{transform:rotate(0deg)} 45%,70%{transform:rotate(-90deg)} 100%{transform:rotate(-90deg)} }
+  #combat-rotate-prompt .crp-title{ font-size:20px; font-weight:900; margin-bottom:8px; color:#ffe080; font-family:'Cinzel',serif; }
+  #combat-rotate-prompt .crp-sub{ font-size:13px; color:var(--text-muted); max-width:300px; line-height:1.6; margin-bottom:18px; }
+  #combat-rotate-prompt .crp-stay{ font-size:12px; color:var(--text-dim); background:transparent; border:1px solid var(--card-border); border-radius:10px; padding:8px 16px; cursor:pointer; font-family:'Nunito',sans-serif; }
+  /* Show only on touch devices, in portrait, while body is flagged in-combat. */
+  @media (orientation:portrait) and (pointer:coarse){
+    body.in-combat:not(.combat-portrait-ok) #combat-rotate-prompt{ display:flex; }
+  }
+  /* Landscape combat: let the battle area use the wider space comfortably. */
   @media (orientation:landscape) and (pointer:coarse){
-    #app{max-width:760px;margin-left:auto;margin-right:auto;}
-    :root{--nav-h:58px;}
-    .bottom-nav{max-width:760px;left:50%;transform:translateX(-50%);width:100%;}
-    .nav-btn{padding-top:6px;padding-bottom:6px;}
-    .nav-icon{transform:scale(0.85);}
+    body.in-combat #app{ max-width:880px; margin:0 auto; padding:8px 16px; }
+    body.in-combat .battle-wrap{ gap:14px; }
   }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -967,11 +954,12 @@
 </style>
 </head>
 <body>
-<!-- ── ROTATE-TO-LANDSCAPE PROMPT (phones in portrait) ─────────────── -->
-<div id="rotate-prompt">
-  <div class="rp-phone">📱</div>
-  <div class="rp-title">Rotate your device</div>
-  <div class="rp-sub">This adventure is best played in landscape. Turn your phone sideways to continue.</div>
+<!-- ── COMBAT-ONLY ROTATE PROMPT ───────────────────────────────────── -->
+<div id="combat-rotate-prompt">
+  <div class="crp-phone">📱</div>
+  <div class="crp-title">Rotate for battle</div>
+  <div class="crp-sub">Combat plays best in landscape. Turn your phone sideways for the full view.</div>
+  <button class="crp-stay" onclick="document.body.classList.add('combat-portrait-ok')">Stay in portrait</button>
 </div>
 <!-- ── AUTH SCREEN ──────────────────────────────────────────────── -->
 <div id="auth-screen" class="on-splash hidden">
@@ -17696,6 +17684,15 @@ function render(){
       const btn=wrap.firstElementChild;
       if(btn){btn.id="tab-help-btn";document.body.appendChild(btn);}
     }
+  })();
+
+  // Combat-only landscape: flag the body when in an active battle so the
+  // "rotate for battle" prompt + landscape combat layout apply ONLY here.
+  (function(){
+    const bs=S.battleState;
+    const inFight = inMobCombatView() && bs && (bs.runActive || (bs.hp!==null && bs.mobHp!==null));
+    document.body.classList.toggle("in-combat", !!inFight);
+    if(!inFight) document.body.classList.remove("combat-portrait-ok");
   })();
 }
 
