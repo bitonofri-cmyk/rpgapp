@@ -10462,7 +10462,12 @@ function getMobObj(bs){
   // Bosses (#-5 area) carry their own large base stats + boss combat multipliers,
   // so they are NOT additionally scaled by the sub-zone ramp.
   const isBoss=(mob.id||"").startsWith("boss_");
-  const mult=isBoss?1:subzoneDiffMult(bs.subzone);
+  let mult=isBoss?1:subzoneDiffMult(bs.subzone);
+  // Tutorial fight: zone 1, sub-zone 1 is deliberately very easy so new players
+  // learn the combat buttons without a real fight. All other zones/sub-zones keep
+  // the normal formula untouched.
+  const isTutorial=((bs.zone||1)===1 && (bs.subzone||1)===1 && !isBoss);
+  if(isTutorial)mult*=0.45; // mob ~55% weaker HP & attack here only
   if(mult!==1){
     mob=Object.assign({},mob,{
       maxHp:Math.round(mob.maxHp*mult),
