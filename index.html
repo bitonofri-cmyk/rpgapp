@@ -5579,14 +5579,21 @@ function load(){
     }
     // ── INSTANCED-GEAR migration (one-time) ──
     // Gear moved from unique-baseId to per-instance {iid,baseId}. Old saves
-    // stored gearInventory as bare id strings — incompatible. Clean-wipe gear
-    // state (per design decision: simplest, no fragile data conversion).
+    // stored gearInventory as bare id strings — incompatible. Only wipe if the
+    // gear ISN'T already in the new instanced shape; otherwise we'd destroy a
+    // perfectly valid (possibly cloud-restored) inventory and zero the gear score.
     if(!s.gearInstanced){
-      s.gearInventory=[];
-      s.equippedGear={};
-      s.enhanceLevels={};
-      s.durability={};
-      s.failstacks=0;
+      const inv=Array.isArray(s.gearInventory)?s.gearInventory:[];
+      const alreadyInstanced=inv.length>0 && inv.every(g=>g&&typeof g==="object"&&g.iid&&g.baseId);
+      if(!alreadyInstanced){
+        // strip any legacy bare-string entries but KEEP valid instanced ones
+        s.gearInventory=inv.filter(g=>g&&typeof g==="object"&&g.iid&&g.baseId);
+        if(!s.gearInventory.length){
+          s.equippedGear={};
+          s.enhanceLevels={};
+          s.durability={};
+        }
+      }
       s.gearInstanced=true;
     }
     return s;
@@ -6033,11 +6040,11 @@ registerSW();
 setTimeout(()=>{ try{ maybeShowInstallWelcome(); }catch(e){} }, 900);
 // Re-check for a new build when the user returns to the app.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') { try { resolveRunOnBail(); } catch(e){} }
+  if (document.visibilityState === 'hidden') { try { resolveRunOnBail(); } catch(e){} try { save(); cloudSaveNow(); } catch(e){} }
   if (document.visibilityState === 'visible' && _swReg) _swReg.update().catch(() => {});
 });
 // Closing/navigating away mid-run also ends the run (can't park a fight to dodge death).
-window.addEventListener('pagehide', () => { try { resolveRunOnBail(); } catch(e){} });
+window.addEventListener('pagehide', () => { try { resolveRunOnBail(); } catch(e){} try { save(); cloudSaveNow(); } catch(e){} });
 
 // Send notification config to the SW whenever it changes
 async function syncNotifToSW() {
@@ -6136,17 +6143,36 @@ function cloudSave(){
     _updateSyncUI();
   },2000);
 }
+// Immediate cloud write — bypasses the 2s debounce. Used when the app is being
+// backgrounded/closed so the last action is never lost. Best-effort, fire-and-forget.
+function cloudSaveNow(){
+  if(!_db||!S)return;
+  clearTimeout(_syncTimer);
+  try{
+    if(typeof _isStateValid==="function"&&!_isStateValid(S))return;
+    _db.collection("saves").doc(_getSaveId()).set({data:JSON.stringify(S),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),v:"4",seq:(S._saveSeq||0),prog:_progressScore(S)});
+  }catch(e){console.warn("cloudSaveNow failed:",e);}
+}
 
 // A monotonic "how far has this character progressed" score. Built only from values
 // that never decrease during normal play, so it's a reliable tiebreaker for which
 // save is more advanced (spending gold/XP won't make it look "behind").
 function _progressScore(s){
   if(!s)return 0;
+  // Count gear so a save WITH gear always outranks an otherwise-identical save
+  // WITHOUT it — prevents cloud sync from clobbering a geared local save with a
+  // gearless cloud copy when level/gold happen to match.
+  const gearCount=Array.isArray(s.gearInventory)?s.gearInventory.length:0;
+  const enhSum=s.enhanceLevels?Object.values(s.enhanceLevels).reduce((a,b)=>a+(Number(b)||0),0):0;
+  const equippedCount=s.equippedGear?Object.values(s.equippedGear).filter(Boolean).length:0;
   return (s.level||0)*100000
     +(s.totalGoldEarned||0)
     +(s.totalDailyCompleted||0)*500
     +(s.totalEpicsCompleted||0)*2000
-    +((s.unlockedMilestones||[]).length)*5000;
+    +((s.unlockedMilestones||[]).length)*5000
+    +gearCount*300
+    +equippedCount*300
+    +enhSum*100;
 }
 async function _cloudLoad(){
   if(!_db)return;
@@ -8176,7 +8202,7 @@ function renderHeader(){
   return`<div class="card">
     <div class="header-top">
       <div><span class="player-name">${nameDisplay}</span>${classTag}<span style="margin-left:8px;color:#666;font-size:13px">Level ${S.level}</span></div>
-      <div style="display:flex;align-items:center;gap:8px">${installBtn}<span style="display:inline-flex;align-items:center;gap:4px;color:#c0c4cc;font-weight:700;font-size:13px">🪙 ${S.silver||0}</span><span class="gold" style="display:inline-flex;align-items:center;gap:4px">${uiIcon("gold",18,"⬡")} ${S.gold}G</span></div>
+      <div style="display:flex;align-items:center;gap:8px">${installBtn}<span id="sync-dot" title="Sync status" style="width:9px;height:9px;border-radius:50%;background:#888;flex-shrink:0;display:inline-block"></span><span style="display:inline-flex;align-items:center;gap:4px;color:#c0c4cc;font-weight:700;font-size:13px">🪙 ${S.silver||0}</span><span class="gold" style="display:inline-flex;align-items:center;gap:4px">${uiIcon("gold",18,"⬡")} ${S.gold}G</span></div>
     </div>
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:6px;min-height:18px">${titleTag}${streakTag}</div>
     <div class="xp-label">XP ${S.xp} / ${needed}</div>
@@ -18429,6 +18455,7 @@ function render(){
       if(btn){btn.id="tab-help-btn";document.body.appendChild(btn);}
     }
   })();
+  if(typeof _updateSyncUI==="function")_updateSyncUI(); // keep the sync dot accurate after redraw
 }
 
 // Show/hide the pulsing red screen edge vignette when in critical HP during combat.
