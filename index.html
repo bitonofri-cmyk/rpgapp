@@ -11776,32 +11776,31 @@ async function buildMobDefeatedSummary(bs,mob){
     else if(pr<0.30){S.potions.small=(S.potions.small||0)+1;drops.push({emoji:"🧪",text:"Small Potion",sub:"restores 30% HP",color:"#3dba6a"});}
   }
 
-  // ── Crafting material drop ────────────────────────────────────────────
+  // ── Crafting material drop — 95% from every mob, small chance of a 2-4 stack ──
   const trashDef=MOB_TRASH_DROPS[mob.id];
   if(trashDef){
-    const matChance=isElite?0.80:0.65;
+    const matChance=0.95;
     if(Math.random()<matChance){
-      if(tryAddMaterial(trashDef.id,1)){
+      // Mostly 1; small chance of a bonus stack of 2-4.
+      const mr=Math.random();
+      let matQty=1;
+      if(mr<0.04)      matQty=4;   // 4% → 4
+      else if(mr<0.10) matQty=3;   // 6% → 3
+      else if(mr<0.20) matQty=2;   // 10% → 2
+      if(tryAddMaterial(trashDef.id,matQty)){
         const matIconHtml=gi_gear(trashDef.id,32)||trashDef.emoji;
-        drops.push({iconHtml:matIconHtml,emoji:trashDef.emoji,text:trashDef.name,sub:`crafting material ×${S.craftingMaterials[trashDef.id]}`,color:"#a0a0a0"});
+        drops.push({iconHtml:matIconHtml,emoji:trashDef.emoji,text:`${trashDef.name}${matQty>1?` ×${matQty}`:""}`,sub:`crafting material ×${S.craftingMaterials[trashDef.id]}`,color:"#a0a0a0"});
       }
       // if blocked, tryAddMaterial already toasted "Inventory Full!"
     }
   }
 
-  // ── Enhancement Scroll drop — VERY high rate. Easy to get, hard to use. ──
+  // ── Enhancement Scroll drop — 95% from every mob, small chance of 2. ──
   if(typeof S.scrolls!=="number")S.scrolls=0;
-  if(isElite){
+  {
     const sr=Math.random();
-    if(sr<0.85){ // elites: 85% chance, can be 2
-      const qty=sr<0.40?2:1;
-      S.scrolls+=qty;
-      drops.push({emoji:"📜",text:`Enhance Scroll ×${qty}`,sub:`scrolls: ${S.scrolls}`,color:"#f0c040"});
-    }
-  } else {
-    const sr=Math.random();
-    if(sr<0.70){ // 70% one scroll
-      const qty=sr<0.25?2:1; // 25% chance it's actually 2
+    if(sr<0.95){ // 95% chance for every mob (elite or not)
+      const qty=sr<0.15?2:1; // small chance (~15%) it's 2
       S.scrolls+=qty;
       drops.push({emoji:"📜",text:`Enhance Scroll ×${qty}`,sub:`scrolls: ${S.scrolls}`,color:"#f0c040"});
     }
