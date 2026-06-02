@@ -1870,6 +1870,7 @@ function getZoneKey(level){const i=getZoneInfo(level);return`${i.zone.zone}-${i.
 
 // ── FANTASY SVG ICON SYSTEM (WoW-inspired) ───────────────────────────────────
 const SVGICONS={
+  nav_town:`<img src="data:image/jpeg;base64,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" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`,
 
 // ── WARRIOR WEAPONS ────────────────────────────────────────────────────
   worn_axe:`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="18" x2="16" y2="6" stroke="#7a5018" stroke-width="2.5" stroke-linecap="round"/><path d="M15,5 L19,7 L16,11 L13,8 Z" fill="#888"/><path d="M15,5 L18,6 L16,9 L13,8 Z" fill="#b0b0b0"/><path d="M7,17 L9,19 L10,18 L8,16 Z" fill="#a07030"/></svg>`,  spiked_club:`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10,19 L14,5" stroke="#8a5820" stroke-width="3" stroke-linecap="round"/><ellipse cx="13" cy="7" rx="4" ry="5" fill="#707070"/><ellipse cx="13" cy="7" rx="3" ry="4" fill="#909090"/><line x1="10" y1="4" x2="9" y2="2" stroke="#808080" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="3" x2="16" y2="2" stroke="#808080" stroke-width="1.5" stroke-linecap="round"/><line x1="17" y1="6" x2="19" y2="5" stroke="#808080" stroke-width="1.5" stroke-linecap="round"/><line x1="17" y1="10" x2="19" y2="11" stroke="#808080" stroke-width="1.5" stroke-linecap="round"/></svg>`,  battle_axe:`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="7" y1="20" x2="17" y2="5" stroke="#7a5018" stroke-width="2" stroke-linecap="round"/><path d="M16,4 L20,7 Q18,11 14,9 Z" fill="#909090"/><path d="M16,4 L19,6 Q18,10 15,9 Z" fill="#c0c0c0"/><path d="M14,9 L18,12 Q16,16 12,13 Z" fill="#909090"/><path d="M14,9 L17,11 Q16,14 13,12 Z" fill="#b0b0b0"/><circle cx="13.5" cy="11" r="1.5" fill="#c89010"/></svg>`,  glaive:`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="6" y1="22" x2="14" y2="4" stroke="#6a4018" stroke-width="2" stroke-linecap="round"/><path d="M13,3 Q18,2 20,6 Q18,10 14,8 Z" fill="#8898b8"/><path d="M13,3 Q17,3 19,6 Q17,9 14,8 Z" fill="#b8d0f0"/><path d="M14,8 Q16,10 15,12" stroke="#6888a8" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M5,21 L7,22 L8,21 L6,20 Z" fill="#c09020"/><circle cx="13" cy="11" r="1.5" fill="#c09020"/></svg>`,  titan_sword:`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13,2 L15,4 L10,20 L8,20 Z" fill="#c84010"/><path d="M13,2 L15,4 L11,18 L9,19 Z" fill="#ff7020"/><path d="M13,2 L14.5,3.5 L10.5,17 L9.5,18.5 Z" fill="#ffaa40"/><path d="M7,15 L17,15 L16,17 L8,17 Z" fill="#ff8000"/><path d="M8,17 L16,17 L15,18 L9,18 Z" fill="#ffb040"/><circle cx="11.5" cy="19" r="2" fill="#2a1010"/><circle cx="11.5" cy="19" r="1.2" fill="#ff5010"/><line x1="9" y1="10" x2="11" y2="10" stroke="#fff8a0" stroke-width="0.8"/><line x1="9.5" y1="13" x2="11.5" y2="13" stroke="#fff8a0" stroke-width="0.8"/></svg>`,
@@ -7586,7 +7587,7 @@ function addCustomQuest(isDaily){
   if(!isDaily&&dur)q.dur=dur;
   if(isDaily){S.customDailyQuests.push(q);}else{S.customEpicQuests.push(q);}
   addLog(`New ${isDaily?"daily":"epic"}: "${title}"`);toast("Quest Added!",`"${title}" is live.`);
-  save();TAB="quests";QTAB=isDaily?"dailies":"town";render();
+  save();if(isDaily){TAB="quests";QTAB="dailies";}else{TAB="town";}render();
 }
 
 function addGenQuest(idx,isDaily){
@@ -7595,7 +7596,7 @@ function addGenQuest(idx,isDaily){
   if(!isDaily&&q.dur)nq.dur=q.dur;
   if(isDaily)S.customDailyQuests.push(nq);else S.customEpicQuests.push(nq);
   GEN.splice(idx,1);addLog(`AI quest: "${nq.title}"`);toast("Quest Added!",`"${nq.title}"`);
-  save();TAB="quests";QTAB=isDaily?"dailies":"town";render();
+  save();if(isDaily){TAB="quests";QTAB="dailies";}else{TAB="town";}render();
 }
 
 function dismissGen(idx){GEN.splice(idx,1);render();}
@@ -8135,7 +8136,7 @@ window.obToggleEditFocus=function(fid){
 // ── RENDER HELPERS ────────────────────────────────────────────────────────────
 function badge(d){return`<span class="badge badge-${d.toLowerCase()}">${d}</span>`;}
 
-function questRow(q,done,isDaily,isCustom){
+function questRow(q,done,isDaily,isCustom,ctx){
   const stats=Object.entries(computeQuestStats(q)).map(([s,v])=>`<span class="tag-stat">+${v} ${s}</span>`).join(" ");
   const mult=getXPMult(q);const bxp=Math.round(q.xp*mult);
   const bonusTag=mult>1?`<span class="bonus-xp">×${mult}</span>`:"";
@@ -8154,12 +8155,22 @@ function questRow(q,done,isDaily,isCustom){
   const timerHtml = isAccepted ? `<span style="font-size:10px;color:${urgentColor};font-weight:700;border:1px solid ${urgentColor}40;padding:1px 6px;border-radius:4px" data-quest-timer="${q.id}">⏱ ${fmtTimeLeft(timeLeft)}</span>` : "";
 
   // Buttons
+  const lockComplete = ctx==="npc" || ctx==="town"; // completion only from the Quests tab
   let actionBtns="";
   if(done){
     actionBtns=`<span class="check">✓</span>`;
   } else if(isAccepted){
-    actionBtns=`<button class="btn btn-primary" onclick="completeQuest('${q.id}',${isDaily})">Complete</button>
-      <button class="btn btn-sm" style="font-size:10px" onclick="abandonQuest('${q.id}',${isDaily})">Abandon</button>`;
+    if(lockComplete){
+      // Quest is accepted but we're in the NPC/Town view — you can't complete it
+      // here. It now lives in the Quests tab; nudge the player there.
+      actionBtns=`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span style="font-size:10px;font-weight:800;color:var(--green);border:1px solid var(--green);padding:2px 8px;border-radius:8px;white-space:nowrap">✓ Accepted</span>
+        <button class="btn btn-sm" style="font-size:10px" onclick="go('quests')">Go to Quests →</button>
+      </div>`;
+    } else {
+      actionBtns=`<button class="btn btn-primary" onclick="completeQuest('${q.id}',${isDaily})">Complete</button>
+        <button class="btn btn-sm" style="font-size:10px" onclick="abandonQuest('${q.id}',${isDaily})">Abandon</button>`;
+    }
   } else {
     actionBtns=`<button class="btn" onclick="acceptQuest('${q.id}',${isDaily})">📜 Accept</button>
       <div style="font-size:9px;color:var(--text-dim);text-align:right">⏱ ${timeLimitH}h limit</div>`;
@@ -8221,7 +8232,7 @@ function renderTabs(){
     {k:"quests",    icon:"nav_quests",    label:"Quests",    badge:dPending>0?dPending:0},
     {k:"combat",    icon:"nav_battle",    label:"Combat",    badge:0},
     {k:"character", icon:"nav_character", label:"Character", badge:charBadge},
-    {k:"arena",     icon:"nav_stats",     label:"Arena",     badge:0},
+    {k:"town",      icon:"nav_town",      label:"Town",      badge:0},
     {k:"menu",      icon:"nav_profile",   label:"Menu",      badge:0},
   ];
   const nav=document.getElementById("bottom-nav");
@@ -8360,7 +8371,7 @@ function renderQuests(){
       <div style="border-top:1px solid var(--card-border);margin:12px -16px;"></div>
       <div style="text-align:center;padding:16px 12px;color:var(--text-muted);font-size:12px;line-height:1.6">
         No active quests right now.${failedCount?` <span style="color:#d04040;font-weight:700">${failedCount} failed today.</span>`:""}<br>
-        <button onclick="go_q('town')" style="margin-top:10px;padding:8px 14px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;border-radius:10px;border:1px solid var(--gold-dim);background:var(--accent-bg);color:var(--gold);cursor:pointer">🏘️ Visit the Town →</button>
+        <button onclick="go('town')" style="margin-top:10px;padding:8px 14px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;border-radius:10px;border:1px solid var(--gold-dim);background:var(--accent-bg);color:var(--gold);cursor:pointer">🏘️ Visit the Town →</button>
       </div>
     `}
     ${doneRows?`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--card-border);font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Completed Today (${completedDaily.length})</div>${doneRows}`:""}
@@ -8637,9 +8648,9 @@ function renderNPCDetail(npc){
   const dialogue=getNPCDialogue(npc);
   const activeList=getActiveQuestsForNPC(npc);
 
-  const activeRows=activeList.map(({q,isDaily})=>questRow(q,false,isDaily,false)).join("");
-  const dailyRows=dailies.map(q=>questRow(q,false,true,false)).join("");
-  const epicRows=epics.map(q=>questRow(q,false,false,false)).join("");
+  const activeRows=activeList.map(({q,isDaily})=>questRow(q,false,isDaily,false,"npc")).join("");
+  const dailyRows=dailies.map(q=>questRow(q,false,true,false,"npc")).join("");
+  const epicRows=epics.map(q=>questRow(q,false,false,false,"npc")).join("");
 
   const lockedBlock=lockedEpics.length?`
     <div style="border-top:1px solid var(--card-border);margin:14px -16px"></div>
@@ -10867,6 +10878,14 @@ function refreshRestTokens(){
 async function doBattleAction(action){
   // action: "strike" | "guard" | "slam" | "skill"
   const _bs=S.battleState;
+  // ── Synchronous re-entry guard ──────────────────────────────────────────
+  // combatLocked is set after several early-return checks and async awaits run
+  // throughout the turn, which left a window where a second tap (anywhere a
+  // battle button sits) could slip a second doBattleAction in before the first
+  // finished — making stray clicks "count as a turn" and tick bleed/DoT again.
+  // This flag is set/cleared synchronously and blocks any re-entry instantly.
+  if(_bs && _bs._turnInProgress) return;
+  if(_bs) _bs._turnInProgress=true;
   try {
   if(getFleeSecondsLeft()>0){toast("Recovering","You fled — wait out the cooldown before fighting again.");return;}
   const bs=initBattleState();
@@ -11585,6 +11604,8 @@ async function doBattleAction(action){
   save();render();
   } catch(e){ console.error("Combat error:",e); if(_bs)_bs.combatLocked=false; save();render(); }
   finally{
+    // Always release the synchronous re-entry guard, however the turn ended.
+    if(_bs) _bs._turnInProgress=false;
     // Safety net: the body clears combatLocked on each of its many early-return
     // paths, but if any single path is ever missed the Strike/Guard/Skill buttons
     // render permanently greyed and combat soft-locks (forcing an app reset). This
@@ -11849,6 +11870,7 @@ function refreshVigorDailyFloor(){
 // fresh gauntlet at full HP in the current zone.
 window.startCombatRun=function(){
   const bs=S.battleState; if(!bs)return;
+  bs._turnInProgress=false; bs.combatLocked=false; // clear any stale lock from a prior crashed session
   if(bs.runActive){ save(); render(); return; }
   refreshVigorDailyFloor();
   // ── Vigor now gates LOOT, not access. All-or-nothing: ───────────────────
@@ -12886,10 +12908,13 @@ function renderBattle(){
                    :slamVar.color==="#ffc040"?"#241a04"
                    :slamVar.color==="#60d050"?"#0a1a08"
                    :slamVar.color==="#c060ff"?"#1a0a24":"#240a08";
+        const SLAM_COST=15;
+        const slamLow=(bs.resource||0)<SLAM_COST;
+        const slamDisabled=bs.combatLocked||bs.pendingMobSummary||slamLow;
         return `<div class="battle-btn-row" style="margin-bottom:6px">
         <button onclick="battleStrike()" class="battle-btn" ${bs.combatLocked||bs.pendingMobSummary?"disabled":""} style="flex:1;border-color:${bs.combatLocked?'var(--text-dim)':cl.color};background:${bs.combatLocked?'var(--bg2)':cl.color+'18'};color:${bs.combatLocked?'var(--text-dim)':cl.color};font-size:13px;font-weight:800">${uiIcon("strike_"+fantasyKey,18,kit.strikeEmoji)} ${kit.strikeName}</button>
         <button onclick="battleGuard()" class="battle-btn" ${bs.combatLocked||bs.pendingMobSummary?"disabled":""} style="flex:1;border-color:${bs.combatLocked?'var(--text-dim)':'#60a0ff'};background:${bs.combatLocked?'var(--bg2)':'#0a1024'};color:${bs.combatLocked?'var(--text-dim)':'#60a0ff'};font-size:13px;font-weight:800">${uiIcon("guard_"+fantasyKey,18,kit.guardEmoji)} ${kit.guardName}</button>
-        <button onclick="battleSlam()" class="battle-btn" ${bs.combatLocked||bs.pendingMobSummary?"disabled":""} style="flex:1;border-color:${bs.combatLocked?'var(--text-dim)':slamVar.color};background:${bs.combatLocked?'var(--bg2)':slamBg};color:${bs.combatLocked?'var(--text-dim)':slamVar.color};font-size:13px;font-weight:800">${skillIcon('slam_'+fantasyKey,18,slamVar.emoji)} ${slamVar.name}</button>
+        <button onclick="battleSlam()" class="battle-btn" ${slamDisabled?"disabled":""} style="flex:1;border-color:${slamDisabled?'var(--card-border)':slamVar.color};background:${slamDisabled?'var(--bg2)':slamBg};color:${slamDisabled?'var(--text-dim)':slamVar.color};font-size:13px;font-weight:800" title="${slamVar.desc}"><span style="${slamDisabled?'filter:grayscale(1);opacity:.6;':''}">${skillIcon('slam_'+fantasyKey,18,slamVar.emoji)}</span> ${slamVar.name}${slamLow?` (${SLAM_COST})`:''}</button>
       </div>
       <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-bottom:10px">${kit.strikeEmoji} Normal · ${kit.guardEmoji} No dmg, -60% incoming · ${slamVar.emoji} ${slamVar.desc}</div>`;
       })()}
@@ -14963,13 +14988,13 @@ const TAB_TUTORIALS={
     {target:'[data-tut="nav-quests"]',title:"Quests — your home base",body:"This is where your day happens. Real-life tasks live here. Completing them is the <strong>only</strong> way to earn XP and gold."},
     {target:'#streak-card',title:"Your streak",body:"Complete at least one quest a day to keep your <strong>streak</strong> alive. Streaks build rewards over time. Miss a day and a 🧊 Freeze can save you."},
     {target:'[data-tut="sub-dailies"]',title:"Dailies",body:"Your <strong>daily quests</strong> — the core loop. A fresh set each day. Tap <strong>Done</strong> when you actually complete one in real life."},
-    {target:'[data-tut="sub-town"]',title:"Town",body:"Visit the <strong>Town</strong> to spend gold in the <strong>Shop</strong> on rewards you define, and talk to <strong>NPCs</strong> who give special quests."},
     {target:'[data-tut="sub-challenges"]',title:"Challenges",body:"Longer multi-step <strong>challenge chains</strong> — real-life goals that unlock unique <strong>titles</strong> when you finish them."},
     {target:'[data-tut="sub-curses"]',title:"Vows",body:"<strong>Vows</strong> are commitments you make to yourself for bonus rewards — but break one and there's a price. Optional, high-stakes."},
   ],
   combat:[
     {target:'[data-tut="sub-open"]',title:"Open World",body:"Explore the <strong>world map</strong>, pick a zone, and grind monsters for <strong>gear and crafting materials</strong>. Your stats decide how hard you hit."},
     {target:'[data-tut="sub-dungeons"]',title:"Dungeons",body:"Tougher, structured fights with <strong>better loot floors</strong>. Limited runs per day — save them for when you're geared up."},
+    {target:'[data-tut="sub-arena"]',title:"Arena",body:"Fight <strong>ghosts</strong> of other players' builds on the leaderboard. Win to climb the ranks — a pure test of your gear and talents."},
     {target:null,title:"Pick a zone",body:"On the world map, tap a <strong>zone chip</strong> above the map to select where to fight. Zones unlock by level — and you must beat a zone's boss to open the next.",fallback:{mock:"zonechips",note:"Zone chips sit in a row above the map."}},
     {target:null,title:"Choose an area",body:"Each zone has <strong>5 sub-areas</strong>, harder left → right. The 5th is a <strong>boss</strong>. Check the Recommended Gear Score before diving in.",fallback:{mock:"subzone",note:"Sub-area chips appear after you enter a zone."}},
     {target:null,title:"Fight actions",body:"In a fight: <strong>Strike</strong> to attack, <strong>Guard</strong> to cut incoming damage, or unleash your <strong>class Skill</strong> when its meter fills. <strong>Flee</strong> to escape.",fallback:{mock:"combatbtns",note:"These buttons appear once a fight begins."}},
@@ -14982,8 +15007,8 @@ const TAB_TUTORIALS={
     {target:'[data-tut="sub-crafting"]',title:"Crafting",body:"Combine <strong>materials</strong> into gear. The Agris set is crafted here — a deterministic path to a full starting kit."},
     {target:'[data-tut="sub-enhance"]',title:"Enhance",body:"Spend gold to <strong>level up a gear piece</strong>. Each level multiplies its stats — the main way you grow stronger over time."},
   ],
-  arena:[
-    {target:null,title:"The Arena",body:"Fight <strong>ghosts</strong> of other players' builds on the leaderboard. Win to climb the ranks — a pure test of your gear and talents.",fallback:{mock:"arena",note:"Pick an opponent from the leaderboard to fight."}},
+  town:[
+    {target:'[data-tut="nav-town"]',title:"Town",body:"Visit the <strong>Town</strong> to spend gold in the <strong>Shop</strong> on rewards you define, and talk to <strong>NPCs</strong> who give special quests."},
   ],
   menu:[
     {target:'[data-tut="nav-menu"]',title:"Menu",body:"Your settings and account live here — focus areas, reminders, and your <strong>saves</strong>."},
@@ -15317,10 +15342,11 @@ function renderWorldMap(){
 // ── COMBAT HUB: Open World (mob combat) + Dungeons ──────────────────────────
 function renderCombatHub(){
   const dleft=(typeof dungeonRunsLeft==="function")?dungeonRunsLeft():0;
-  const cmb=(CMBTAB==="dungeons")?"dungeons":"open";
+  const cmb=(CMBTAB==="dungeons")?"dungeons":(CMBTAB==="arena")?"arena":"open";
   const cmbTabs=[
     {k:"open",     ico:"openworld", icon:"🗺️", label:"Open World", badge:0},
     {k:"dungeons", ico:"dungeons",  icon:"🏰", label:"Dungeons",   badge:dleft>0?dleft:0},
+    {k:"arena",    ico:"arena",     icon:"⚔️", label:"Arena",      badge:0},
   ];
   const bar=`<div class="sub-tab-bar">${cmbTabs.map(t=>`
     <button class="sub-tab-btn${cmb===t.k?" active":""}" data-tut="sub-${t.k}" onclick="go_cmb('${t.k}')">
@@ -15328,6 +15354,14 @@ function renderCombatHub(){
       <span>${t.label}</span>
       ${t.badge?`<span class="st-badge">${t.badge}</span>`:""}
     </button>`).join("")}</div>`;
+  if(cmb==="arena"){
+    // Re-entering Combat with arena as the persisted sub-tab: make sure we never
+    // land on a stale fight/loading state from a previous visit.
+    if(typeof _arenaEnterCleanup==="function" && !(ARENA.view==="fight"&&!ARENA.result&&ARENA.playerHp>0&&ARENA.ghostHp>0)){
+      _arenaEnterCleanup();
+    }
+    return bar+renderArena();
+  }
   if(cmb==="dungeons"){
     if(DUNGEON) return bar+renderDungeonBattle();
     return bar+renderDailyDungeonEntrance()+renderDungeonEntrance();
@@ -15421,6 +15455,20 @@ window.closeCursePicker=function(){S._cursePicker=false;save();render();};
 window.toggleCurse=function(id){const arr=S.profile.curses||(S.profile.curses=[]);const i=arr.findIndex(c=>c.id===id);if(i>=0)arr.splice(i,1);else arr.push({id:id,freq:"daily"});save();render();};
 window.setCurseFreq=function(id,freq){const c=(S.profile.curses||[]).find(c=>c.id===id);if(c){c.freq=freq;save();render();}};
 
+// Town is now its own bottom-bar tab (moved out of the Quests sub-tabs).
+// Preserves the Shop / Marketplace drill-in states via S._townShop / S._townMarket.
+function renderTownHub(){
+  if(S._townMarket){
+    const backBtn=`<button onclick="S._townMarket=false;render()" style="margin-bottom:10px;padding:8px 14px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;border-radius:10px;border:1px solid var(--card-border);background:var(--bg2);color:var(--text-muted);cursor:pointer">← Back to Town</button>`;
+    return backBtn+renderMarketplace();
+  }
+  if(S._townShop){
+    const backBtn=`<button onclick="S._townShop=false;render()" style="margin-bottom:10px;padding:8px 14px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;border-radius:10px;border:1px solid var(--card-border);background:var(--bg2);color:var(--text-muted);cursor:pointer">← Back to Town</button>`;
+    return backBtn+renderShop();
+  }
+  return renderTown();
+}
+
 function renderQuestHub(){
   const ti=getTierIndex(S.level);
   const dDone=S.dailyCompleted.filter(id=>S.activeDailyIds.includes(id)||S.customDailyQuests.some(q=>q.id===id)).length;
@@ -15428,7 +15476,6 @@ function renderQuestHub(){
   const dPending=dTotal-dDone;
   const subTabs=[
     {k:"dailies",    ico:"dailies",    icon:"⚔️", label:"Dailies",    badge:dPending>0?dPending:0},
-    {k:"town",       ico:"town",       icon:"🏘️", label:"Town",       badge:0},
     {k:"challenges", ico:"challenges", icon:"🏅", label:"Challenges", badge:0},
     {k:"curses",     ico:"curses",     icon:"🛡️", label:"Vows",       badge:0},
   ];
@@ -15530,18 +15577,8 @@ function renderQuestHub(){
     }
     return"";
   })();
+  if(QTAB==="town"){ QTAB="dailies"; } // Town moved to its own bottom-bar tab
   if(QTAB==="dailies") return greetingBanner+renderStreakCard()+renderTutorialBanner()+streakRecovery+classMechanicBanner+subBar+renderQuests();
-  if(QTAB==="town"){
-    if(S._townMarket){
-      const backBtn=`<button onclick="S._townMarket=false;render()" style="margin-bottom:10px;padding:8px 14px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;border-radius:10px;border:1px solid var(--card-border);background:var(--bg2);color:var(--text-muted);cursor:pointer">← Back to Town</button>`;
-      return greetingBanner+subBar+backBtn+renderMarketplace();
-    }
-    if(S._townShop){
-      const backBtn=`<button onclick="S._townShop=false;render()" style="margin-bottom:10px;padding:8px 14px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;border-radius:10px;border:1px solid var(--card-border);background:var(--bg2);color:var(--text-muted);cursor:pointer">← Back to Town</button>`;
-      return greetingBanner+subBar+backBtn+renderShop();
-    }
-    return greetingBanner+subBar+renderTown();
-  }
   if(QTAB==="curses") return greetingBanner+subBar+renderCurses();
   return greetingBanner+subBar+renderChallenges();
 }
@@ -17426,7 +17463,7 @@ function renderDungeonActions(){
   let primaryRow=`<div class="battle-btn-row" style="margin-bottom:6px">
     <button onclick="dungeonAction('attack')" ${dis} class="battle-btn" style="flex:1;border-color:${locked?'var(--text-dim)':'#ff8040'};background:${locked?'var(--bg2)':'#240a08'};color:${locked?'var(--text-dim)':'#ff8040'};font-size:13px;font-weight:800">${uiIcon("strike_"+me.cls,18,"🗡️")} Attack</button>
     <button onclick="dungeonAction('guard')" ${dis} class="battle-btn" style="flex:1;border-color:${locked?'var(--text-dim)':'#60a0ff'};background:${locked?'var(--bg2)':'#0a1024'};color:${locked?'var(--text-dim)':'#60a0ff'};font-size:13px;font-weight:800" title="Reduce next hit by 60%">${uiIcon("guard_"+me.cls,18,"🛡️")} Guard</button>
-    <button onclick="dungeonAction('slam')" ${(locked||slamLow)?"disabled":""} class="battle-btn" style="flex:1;border-color:${(locked||slamLow)?'var(--card-border)':slam.color};background:${(locked||slamLow)?'var(--bg2)':slamBg};color:${(locked||slamLow)?'var(--text-dim)':slam.color};font-size:12px;font-weight:800" title="${slam.desc}">${slam.emoji} ${slam.name}${slamLow?` (${DG_SLAM_COST})`:''}</button>
+    <button onclick="dungeonAction('slam')" ${(locked||slamLow)?"disabled":""} class="battle-btn" style="flex:1;border-color:${(locked||slamLow)?'var(--card-border)':slam.color};background:${(locked||slamLow)?'var(--bg2)':slamBg};color:${(locked||slamLow)?'var(--text-dim)':slam.color};font-size:12px;font-weight:800" title="${slam.desc}"><span style="${(locked||slamLow)?'filter:grayscale(1);opacity:.6;':''}">${skillIcon('slam_'+me.cls,18,slam.emoji)}</span> ${slam.name}${slamLow?` (${DG_SLAM_COST})`:''}</button>
   </div>`;
 
   // Skill buttons — multi-line (emoji / name / state) exactly like PvE
@@ -18372,7 +18409,7 @@ function renderArenaFight(){
     <div style="display:flex;gap:6px;margin-bottom:6px">
       <button onclick="arenaStrike()" class="battle-btn" ${ARENA.locked?"disabled":""} style="flex:1;border-color:${cl.color};background:${cl.color}18;color:${cl.color};font-size:12px;font-weight:800">${uiIcon("strike_"+cls,16,"\u2694\uFE0F")} Strike</button>
       <button onclick="arenaGuard()" class="battle-btn" ${ARENA.locked?"disabled":""} style="flex:1;border-color:#60a0ff;background:#0a1024;color:#60a0ff;font-size:12px;font-weight:800">${uiIcon("guard_"+cls,16,"\uD83D\uDEE1\uFE0F")} Guard</button>
-      <button onclick="arenaSlam()" class="battle-btn" ${ARENA.locked?"disabled":""} style="flex:1;border-color:${slamVar.color};background:var(--bg2);color:${slamVar.color};font-size:12px;font-weight:800">${skillIcon('slam_'+cls,18,slamVar.emoji)} ${slamVar.name}</button>
+      <button onclick="arenaSlam()" class="battle-btn" ${(ARENA.locked||(ARENA.playerResource||0)<15)?"disabled":""} style="flex:1;border-color:${(ARENA.locked||(ARENA.playerResource||0)<15)?'var(--card-border)':slamVar.color};background:var(--bg2);color:${(ARENA.locked||(ARENA.playerResource||0)<15)?'var(--text-dim)':slamVar.color};font-size:12px;font-weight:800" title="${slamVar.desc||''}"><span style="${(ARENA.locked||(ARENA.playerResource||0)<15)?'filter:grayscale(1);opacity:.6;':''}">${skillIcon('slam_'+cls,18,slamVar.emoji)}</span> ${slamVar.name}${(ARENA.playerResource||0)<15?' (15)':''}</button>
     </div>
     ${(()=>{
       let btns=eqSkills.map(sk=>{
@@ -18402,7 +18439,7 @@ function renderArenaFight(){
   </div>`;
 }
 
-const TABS={quests:renderQuestHub,combat:renderCombatHub,shop:renderShop,enhance:renderCharacter,character:renderCharacter,arena:renderArena,profile:renderProfile,menu:renderProfile,log:renderLog};
+const TABS={quests:renderQuestHub,combat:renderCombatHub,shop:renderShop,enhance:renderCharacter,character:renderCharacter,arena:renderArena,town:renderTownHub,profile:renderProfile,menu:renderProfile,log:renderLog};
 
 function render(){
   applyClassTheme();
@@ -18463,17 +18500,17 @@ function render(){
 function updateCriticalHpVignette(){
   const v=document.getElementById("critical-hp-vignette");
   let critical=false;
-  if(inMobCombatView()){
-    // Arena takes priority if a fight is active
+  if(inArenaView()){
+    // Arena fight — pulse vignette when the player's ghost-fight HP is low
     if(typeof ARENA!=="undefined"&&ARENA.view==="fight"&&!ARENA.result&&ARENA.playerHp>0&&ARENA.playerMaxHp){
       critical=(ARENA.playerHp/ARENA.playerMaxHp*100)<=25;
-    } else {
-      const bs=S.battleState;
-      const inActiveBattle=bs&&!bs.pendingMobSummary&&bs.hp>0;
-      if(inActiveBattle){
-        const pStats=getBattlePlayerStats?.();
-        if(pStats?.maxHp){const pct=bs.hp/pStats.maxHp*100;critical=pct<=25;}
-      }
+    }
+  } else if(inMobCombatView()){
+    const bs=S.battleState;
+    const inActiveBattle=bs&&!bs.pendingMobSummary&&bs.hp>0;
+    if(inActiveBattle){
+      const pStats=getBattlePlayerStats?.();
+      if(pStats?.maxHp){const pct=bs.hp/pStats.maxHp*100;critical=pct<=25;}
     }
   }
   if(critical&&!v){
@@ -18486,24 +18523,32 @@ function updateCriticalHpVignette(){
   }
 }
 
+// Arena entry cleanup — if there's no genuine in-progress fight, force the
+// leaderboard view. Prevents a stale view/result/loading flag from rendering a
+// blank/broken arena. Shared by go() (legacy direct nav) and go_cmb() (arena
+// is now a Combat sub-tab).
+function _arenaEnterCleanup(){
+  const liveFight = ARENA.opponent && !ARENA.result && ARENA.view==="fight" && ARENA.playerHp>0 && ARENA.ghostHp>0;
+  if(!liveFight){
+    ARENA.view="leaderboard";
+    ARENA.result=null;
+    ARENA.opponent=null;
+    ARENA.loading=false;   // never enter the tab stuck on a spinner
+    ARENA.error="";
+  }
+}
 window.go=t=>{
   TAB=t;OB.mode="";OB.step="";
-  // Entering the Arena tab: if there's no genuine in-progress fight, force the
-  // leaderboard view. Prevents a stale view/result from a prior fight (or a left-over
-  // ARENA.view) from rendering a blank/broken screen.
-  if(t==="arena"){
-    // Only stay in a fight if one is genuinely live (opponent set, not yet resolved,
-    // and we were actually viewing the fight). Otherwise force a clean leaderboard so a
-    // stale view/result/loading flag can never leave the tab blank.
-    const liveFight = ARENA.opponent && !ARENA.result && ARENA.view==="fight" && ARENA.playerHp>0 && ARENA.ghostHp>0;
-    if(!liveFight){
-      ARENA.view="leaderboard";
-      ARENA.result=null;
-      ARENA.opponent=null;
-      ARENA.loading=false;   // never enter the tab stuck on a spinner
-      ARENA.error="";
-    }
+  // Pressing a bottom-bar tab lands on that tab's main sub-view.
+  if(t==="quests"){ QTAB="dailies"; }
+  else if(t==="combat"){
+    CMBTAB="open";              // Open World sub-tab
+    // Reset to the world map unless the player is mid-fight (don't yank them out).
+    if(!S.battleState){ WORLD_MAP.open=true; SUBZONE.zone=0; }
   }
+  else if(t==="character"){ CTAB="equipment"; } // Equipment sub-tab
+  else if(t==="town"){ S._townShop=false; S._townMarket=false; OPEN_NPC=null; } // NPC list (town grid)
+  if(t==="arena")_arenaEnterCleanup(); // legacy direct nav to arena (if any)
   if(!(t==="combat"&&CMBTAB==="open"))stopAutoBattle();
   render();
 };
@@ -18512,7 +18557,9 @@ window.goToStreak=()=>{TAB="quests";QTAB="dailies";render();setTimeout(()=>{cons
 window.go_c=t=>{CTAB=t;render();};
 // True when the player is viewing the Open World mob-combat screen (now under the Combat tab).
 function inMobCombatView(){return TAB==="combat"&&CMBTAB==="open";}
-window.go_cmb=t=>{CMBTAB=t;OPEN_NPC=null;if(t!=="open")stopAutoBattle();if(t==="open"&&getFleeSecondsLeft()>0)startFleeCooldownTimer();render();};
+// True when the player is viewing the Arena (now a Combat sub-tab).
+function inArenaView(){return TAB==="combat"&&CMBTAB==="arena";}
+window.go_cmb=t=>{CMBTAB=t;OPEN_NPC=null;if(t!=="open")stopAutoBattle();if(t==="arena")_arenaEnterCleanup();if(t==="open"&&getFleeSecondsLeft()>0)startFleeCooldownTimer();render();};
 window.completeQuest=completeQuest;
 window.deleteQuest=deleteQuest;
 window.buyReward=buyReward;
