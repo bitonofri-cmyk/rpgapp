@@ -4023,6 +4023,18 @@ const DAILY_POOL=[
   {id:"x_car_15",title:"Do the thing you fear most at work",desc:"The avoided email, the hard ask, the scary task. Today, first.",gold:85,xp:115,stats:{WP:4,INT:1},diff:"Hard",minTier:2,focus:"career"},
   {id:"p29",title:"Kill your biggest time-waster",desc:"Identify the #1 leak in your day and cut it for the whole day.",gold:70,xp:95,stats:{WP:4},diff:"Hard",minTier:2,focus:"career"},
   {id:"x_car_16",title:"Pitch or propose something",desc:"Put forward an idea to someone who can say yes. Risk the ask.",gold:85,xp:115,stats:{WP:4,INT:2},diff:"Hard",minTier:3,focus:"career"},
+  {id:"con_01",title:"Text someone you've drifted from",desc:"One person you've lost touch with feels closer the moment they hear from you. Even a one-line 'thinking of you' counts.",gold:38,xp:60,stats:{},diff:"Easy",minTier:1,focus:"connection"},
+  {id:"con_02",title:"Call a family member",desc:"A voice does what a text can't. Five minutes is a full win — dial after dinner and just see how they are.",gold:48,xp:70,stats:{},diff:"Medium",minTier:1,focus:"connection"},
+  {id:"con_03",title:"Tell one person what you appreciate about them",desc:"Naming it out loud lifts both of you. Pick someone and say the specific thing — a sentence is enough.",gold:38,xp:60,stats:{},diff:"Easy",minTier:1,focus:"connection"},
+  {id:"con_04",title:"Eat one meal with someone, no phones",desc:"Undistracted time together is the rarest gift now. Share one meal today with the phone in another room.",gold:48,xp:70,stats:{},diff:"Medium",minTier:1,focus:"connection"},
+  {id:"con_05",title:"Reply to the message you've been avoiding",desc:"That unanswered text is quietly weighing on you and them. Just open it and send something — done beats perfect.",gold:38,xp:60,stats:{},diff:"Easy",minTier:1,focus:"connection"},
+  {id:"con_06",title:"Ask someone a real question and listen",desc:"Feeling heard is what people remember. Ask one person how they're really doing — then just listen, don't fix.",gold:48,xp:70,stats:{},diff:"Medium",minTier:1,focus:"connection"},
+  {id:"con_07",title:"Thank someone who helped you",desc:"Gratitude said out loud strengthens the bond and your own mood. Reach out to one person who made your life easier.",gold:38,xp:60,stats:{},diff:"Easy",minTier:1,focus:"connection"},
+  {id:"con_08",title:"Make a plan to see someone in person",desc:"The calendar is where friendships survive. Lock in one actual meetup — even just coffee, even two weeks out.",gold:48,xp:70,stats:{},diff:"Medium",minTier:1,focus:"connection"},
+  {id:"con_09",title:"Check in on someone going through it",desc:"Showing up matters more than the right words. Send one person a 'I'm here if you need anything' and mean it.",gold:48,xp:70,stats:{},diff:"Medium",minTier:1,focus:"connection"},
+  {id:"con_10",title:"Reconnect with an old friend",desc:"Old friendships restart faster than you'd think. Message one person from your past with a memory you still smile about.",gold:68,xp:100,stats:{},diff:"Medium",minTier:1,focus:"connection"},
+  {id:"con_11",title:"Give someone your full attention for 10 minutes",desc:"Real presence is felt instantly. Pick one conversation today and be all the way in it — no scrolling, no half-listening.",gold:48,xp:70,stats:{},diff:"Medium",minTier:1,focus:"connection"},
+  {id:"con_12",title:"Do one small kind thing for someone",desc:"A tiny act of help loops back as your own mood lift. Carry something, cover a task, send a useful link — one thing, today.",gold:38,xp:60,stats:{},diff:"Easy",minTier:1,focus:"connection"},
 ];
 
 // ── EPIC POOL ─────────────────────────────────────────────────────────────────
@@ -4095,6 +4107,12 @@ const EPIC_POOL=[
   // Health epics (VIT)
   {id:"e11",title:"30 days of clean eating",              desc:"Zero processed food for 30 days. Real ingredients, every meal, no exceptions.",        gold:550, xp:700, stats:{VIT:15,WP:8},        diff:"Epic",      dur:"30 days",  minTier:1},
   {id:"e22",title:"Fix your sleep for 21 days",           desc:"Same bedtime and wake time, 7-8 hours, for 21 consecutive days.",                     gold:500, xp:650, stats:{VIT:12,WP:8},        diff:"Epic",      dur:"21 days",  minTier:1},
+  // Connection epics
+  {id:"e41",title:"Reconnect with 5 people",              desc:"Reach out to five people you've lost touch with — one real conversation each. The ones you've been meaning to call for months.", gold:480, xp:600, stats:{}, diff:"Epic", dur:"~2 weeks", minTier:1},
+  {id:"e42",title:"Weekly call with someone you love",    desc:"Same person, same slot, four weeks running. A standing call is how distance stops eating a relationship alive.", gold:500, xp:650, stats:{}, diff:"Epic", dur:"4 weeks", minTier:1},
+  {id:"e43",title:"Host something — anything",             desc:"Plan and pull off one real gathering: dinner, game night, a walk with friends. You being the one who makes it happen.", gold:520, xp:680, stats:{}, diff:"Epic", dur:"~2 weeks", minTier:2},
+  {id:"e44",title:"30 days of one daily check-in",         desc:"Every day for a month, reach out to one person — text, call, or in person. Small contact, compounded, rebuilds your whole circle.", gold:600, xp:780, stats:{}, diff:"Epic", dur:"30 days", minTier:1},
+  {id:"e45",title:"Mend one relationship",                 desc:"One bond that's gone quiet or cold after a fallout. Make the first move toward repairing it — the hardest and most worth it.", gold:650, xp:850, stats:{}, diff:"Legendary", dur:"~3 weeks", minTier:2},
 ];
 
 // ── SHOP ──────────────────────────────────────────────────────────────────────
@@ -4367,11 +4385,13 @@ function focusXpFor(lvl){return Math.floor(80*Math.pow(lvl,1.35));}
 
 const FOCUS_LABELS={
   fitness:"💪 Fitness", health:"🍎 Health", learning:"📚 Learning",
-  mindset:"🧠 Mindset", creative:"🔨 Creative", career:"💼 Career"
+  mindset:"🧠 Mindset", creative:"🔨 Creative", career:"💼 Career",
+  connection:"🤝 Connection"
 };
 const FOCUS_COLORS={
   fitness:"#e05050", health:"#3dba6a", learning:"#4a9fd4",
-  mindset:"#9b6fef", creative:"#f0a030", career:"#d4900a"
+  mindset:"#9b6fef", creative:"#f0a030", career:"#d4900a",
+  connection:"#e06fa8"
 };
 
 // ── CLASS SPELLS ──────────────────────────────────────────────────────────────
@@ -5153,6 +5173,12 @@ const OB_QUESTIONS=[
     {val:"rarely", emoji:"🚶", label:"Rarely",             sub:"I keep meaning to start",        scores:{sage:1}},
     {val:"never",  emoji:"🛋️", label:"Basically never",   sub:"Physical activity is not my thing",scores:{monk:1}},
   ]},
+  {id:"social", title:"How's your connection with the people in your life?", sub:"Friends, family, the ones who matter. Honest answer.", options:[
+    {val:"thriving", emoji:"🫂", label:"Strong — I feel close to people", sub:"Regular, real connection",          scores:{warrior:1}},
+    {val:"okay",     emoji:"🙂", label:"Okay, but could be better",        sub:"Present, but I drift sometimes",     scores:{monk:1}},
+    {val:"drifting", emoji:"🌫️", label:"I've been drifting from people",   sub:"Out of touch with people I care about",scores:{sage:1}},
+    {val:"lonely",   emoji:"🕯️", label:"Honestly, pretty isolated",        sub:"I want this to change",             scores:{monk:1}},
+  ]},
 ];
 
 // Focus mapping from question answers
@@ -5161,6 +5187,7 @@ const FOCUS_FROM_ANSWERS={
   style:  {study:"learning",  build:"creative",  reflect:"mindset", execute:"career", all:null},
   bottleneck:{focus:"mindset",motiv:"mindset",time:"career",money:"career",start:"learning"},
   fitness:{daily:"fitness",   often:"fitness",   rarely:"health",  never:null},
+  social: {thriving:null, okay:"connection", drifting:"connection", lonely:"connection"},
 };
 
 function assignClassFromAnswers(answers){
@@ -5183,13 +5210,15 @@ function assignFocusesFromAnswers(answers){
   // Primary: from goal
   const f1=FOCUS_FROM_ANSWERS.goal[answers.goal];
   if(f1)focuses.push(f1);
+  // (Connection is no longer a focus — it's a separate area gated by the
+  // social/connection answer in the calibration step.)
   // Secondary: from style or bottleneck
   const f2a=FOCUS_FROM_ANSWERS.style[answers.style];
   const f2b=FOCUS_FROM_ANSWERS.bottleneck[answers.bottleneck];
   // Also check fitness question for focus
   const f2c=FOCUS_FROM_ANSWERS.fitness[answers.fitness];
   const f2=f2a||f2c||f2b;
-  if(f2&&f2!==f1)focuses.push(f2);
+  if(f2&&!focuses.includes(f2))focuses.push(f2);
   // Ensure we have 2
   if(focuses.length<2&&f2c&&!focuses.includes(f2c))focuses.push(f2c);
   if(focuses.length<2&&f2b&&!focuses.includes(f2b))focuses.push(f2b);
@@ -5474,6 +5503,17 @@ function resetDay(s){
   const remaining=seededShuffle(available.filter(q=>!used.has(q.id)),seed+2);
   while(picked.length<targetCount&&remaining.length){
     const q=remaining.shift();picked.push(q);used.add(q.id);
+  }
+
+  // ── Connection quests (separate area, gated by connection strength) ──
+  // When the player's connection is "drifting"/"isolated", add 2-3 connection
+  // quests on top of the focus-based roll. Independent of the 3 focus picks.
+  if(s.profile?.connectionActive){
+    const conTarget=2+(seed%2); // 2 or 3
+    const conPool=DAILY_POOL.filter(q=>q.focus==="connection"&&q.minTier<=ti&&!q.curse&&!used.has(q.id));
+    seededShuffle(conPool,seed+7).slice(0,conTarget).forEach(q=>{
+      picked.push(q);used.add(q.id);
+    });
   }
 
   s.activeDailyIds=picked.map(q=>q.id);
@@ -7611,15 +7651,23 @@ async function generateQuests(){
   const isD=type==="daily";
   const cl=CLASSES[S.profile.playerClass];
   const ctx=cl?`Player is a ${cl.name} — bias toward ${cl.bonusStats.join(" and ")} stats.`:"";
-  const prompt=`You design quests for a life-RPG app where real actions level up a character.
+  const prompt=`You design quests for a life-RPG app where REAL-LIFE actions level up a character. The whole point is that bettering real life is what powers the game — the rewards amplify the real action, they are never the reason for it.
 Player focused on: "${focus}". ${ctx}
 Generate 4 ${isD?"daily (one day)":"epic (days/weeks)"} quests.
+
+DESIGN PRINCIPLES (grounded in behavior science — follow all of them):
+- Real benefit first: the desc must open with the concrete real-life payoff of doing this (how it makes the player feel or what it improves), THEN frame it in game language. Never sell the gold/XP as the reason.
+- Make it doable: each quest must have a genuinely tiny entry point so a low-motivation day can't be an excuse (e.g. "even 2 minutes counts", "just lace your shoes and step outside"). Bake this into the desc.
+- Suggest an anchor when natural: tie the action to an existing routine ("after your morning coffee…", "before bed…") so it becomes a habit, not a chore.
+- Favor high-payoff habits research backs most: physical movement, sleep, real food, mindfulness, learning/curiosity, creative making, and especially CONNECTION with other people (texting a friend, calling family) — connection is the strongest predictor of wellbeing and is easy to forget.
+- Lean into curiosity, zest, and small wins — these produce the most genuine enjoyment, which is what makes a habit stick.
+- Concrete and hard to fake. No vague goals like "be healthier".
+
 Stats: STR=fitness/strength, INT=learning/intelligence, VIT=health/vitality, WP=willpower/discipline, AGI=creative craft
 Gold: Easy=30-50,Medium=55-80,Hard=85-110,Epic=350-550,Legendary=650-900
 XP: Easy=35-60,Medium=60-85,Hard=90-120,Epic=400-600,Legendary=700-1000
-Make quests specific, hard to fake, concrete. No vague goals.
 Return ONLY a JSON array, no markdown:
-[{"title":"...","desc":"1-2 sentences","diff":"Medium","gold":60,"xp":70,"stats":{"INT":3},"isDaily":${isD}${!isD?',"dur":"~1 week"':""}}]`;
+[{"title":"...","desc":"1-2 sentences, benefit-first then game framing, with a tiny entry point","diff":"Medium","gold":60,"xp":70,"stats":{"INT":3},"isDaily":${isD}${!isD?',"dur":"~1 week"':""}}]`;
   try{
     const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
     if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"API error "+res.status);}
@@ -7778,14 +7826,19 @@ window.obAcceptPact=function(){
   render();
 };
 window.obQsVowsNext=function(){OB.step="pact";render();};
-window.obQsVowsBack=function(){OB.step="qs_cal2";render();};
+window.obQsVowsBack=function(){OB.step="qs_cal3";render();};
 window.obQsCalNext=function(){
   const ci=parseInt(OB.step.slice(6));
-  const calQuestions=["days","freetime","fitness"];
+  const calQuestions=["days","freetime","fitness","social"];
   const qid=calQuestions[ci];
   if(!OB.answers[qid]){toast("Pick an option","Choose one to continue.");return;}
   const next=ci+1;
   if(next>=calQuestions.length){
+    // Connection is a SEPARATE area (not one of the 3 focus picks). The social
+    // answer decides whether connection quests are active: only "drifting" or
+    // "isolated" turns them on.
+    S.profile.connectionState=OB.answers.social||"";
+    S.profile.connectionActive=(OB.answers.social==="drifting"||OB.answers.social==="lonely");
     // Save everything, then show the honesty pact before entering the app
     S.profile.focuses=OB.assignedFocuses;
     S.profile.questsSetUp=true;
@@ -8035,7 +8088,7 @@ function renderOnboarding(){
   // ── STEP: QUEST SETUP — CALIBRATION (3 questions) ──────────────────────
   else if(/^qs_cal\d+$/.test(OB.step)){
     const ci=parseInt(OB.step.slice(6));
-    const calQuestions=["days","freetime","fitness"];
+    const calQuestions=["days","freetime","fitness","social"];
     const qid=calQuestions[ci];
     const q=OB_QUESTIONS.find(x=>x.id===qid);
     const pct=Math.round(((ci+1)/(calQuestions.length+1))*100);
@@ -8439,6 +8492,16 @@ const NPCS=[
       new:"Ah, another soul who hasn't made anything yet. Let's change that — today.",
       mid:"You're building a craft. I see it. Don't stop now — the next piece is always the best one.",
       vet:"You make things real. That's rare. What are we shipping next?"
+    }
+  },
+  {
+    id:"mara", name:"Mara", title:"Keeper of Bonds", domain:"Connection & Relationships",
+    emoji:"🤝", color:"#e06fa8", stat:"WP", focuses:["connection"],
+    epicIds:["e44","e42","e41","e43","e45"],
+    dialogue:{
+      new:"You carry yourself like someone who's been alone with it for a while. The people who matter are closer than you think — let's reach them.",
+      mid:"You're letting people back in. I can tell. Keep going — every bond you tend tends you back.",
+      vet:"Look at you — surrounded, and not by accident. You built this. Who's next to hear from you?"
     }
   }
 ];
