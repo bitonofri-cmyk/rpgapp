@@ -10383,7 +10383,9 @@ function checkTutorialProgress(){
       for(let i=0;i<q.grantFailstacks;i++)S.failstackScrolls.push(5);
     }
     // level-up sweep
+    const _preTutLevel=S.level;
     while(S.xp>=xpFor(S.level)){S.xp-=xpFor(S.level);S.level++;}
+    if(S.level>_preTutLevel&&typeof reconcileTalentPoints==="function")reconcileTalentPoints();
     S.tutorialStep++;
     S._tutJustCompleted=q; // for the celebration toast/banner
     advanced=true;
@@ -11077,20 +11079,10 @@ async function doBattleAction(action){
     }
   }
 
-  // ── Mob BLEED tick (legacy — from Artisan Poison Arrow / Rogue Backstab) ─
-  if(bs.bleedTurns>0){
-    const bleedDmg=Math.round(bs.bleedDmg*(pStats.bleedBonus||1));
-    bs.mobHp=Math.max(0,bs.mobHp-bleedDmg);
-    bs.bleedTurns--;
-    battleLog(`🩸 Bleed: ${mob.name} takes ${bleedDmg} damage (${bs.bleedTurns} turns left).`,"player-hit");
-    showBattleDmg("mob-side","-"+bleedDmg+" 🩸","#e02040");
-    if(bs.mobHp<=0){
-      const mobEl=document.querySelector(".mob-side");
-      if(mobEl)mobEl.classList.add("dying");
-      await sleep(680);
-      await buildMobDefeatedSummary(bs,mob);bs.combatLocked=false;save();render();return;
-    }
-  }
+  // ── Mob BLEED tick relocated to the monster's turn (end of round) ───────
+  // Was here at player-turn start, which made it fire on whatever button you
+  // pressed next. It now ticks inside doMobAttack so it reads as a proper
+  // end-of-round damage-over-time effect.
 
   // ── Healer archetype — mob heals self every 4 turns ─────────────────────
   const healerHeal=archetypeHealAmount(mob,bs);
@@ -11712,13 +11704,39 @@ async function doBattleAttack(useSkill=false){
 }
 
 // ── MOB ATTACK PHASE — handles telegraph cycle + status + archetypes ─────
+// Wrapper: runs the mob's turn, then ALWAYS resolves the player's guard frame.
+// Previously the class-themed guard border only dropped when the mob landed a
+// clean damaging hit — on a miss/dodge/absorb/telegraph turn it lingered on
+// screen into the next turn. Now we flare (if a hit was guarded) or quietly
+// remove it once the mob phase finishes, no matter what happened.
 async function doMobAttack(bs,mob,pStats){
+  const wasGuarding=!!bs.playerGuarding;
+  try{
+    await _doMobAttackInner(bs,mob,pStats);
+  } finally {
+    const stillUp=_getBattleOverlay().querySelector(`.guardframe-fx[data-side="player-side"]`);
+    if(stillUp){
+      if(wasGuarding)flareGuardFrame("player-side"); // brief flare-out, then drop
+      else removeGuardFrame("player-side");
+    }
+  }
+}
+
+async function _doMobAttackInner(bs,mob,pStats){
   // ── Mob stunned? Skip turn entirely (and clear telegraph counter) ─────
   if((bs.mobStunTurns||0)>0){
     bs.mobStunTurns--;
     battleLog(`⚡ ${mob.name} is stunned and can't act!`,"reward");
     showBattleDmg("mob-side","STUNNED","#ffd040");
     return;
+  }
+
+  // ── Stamina cost of FACING the monster's turn ──────────────────────────
+  // Every turn the monster actually gets to act burns run stamina, so the
+  // fewer hits you take (kill fast, guard smart, end fights quick) the deeper
+  // a single run can go. A stunned/skipped monster turn above costs nothing.
+  if(bs.runActive){
+    bs.runStamina=Math.max(0,(bs.runStamina||0)-STAMINA_PER_MOB_TURN);
   }
 
   // Telegraph cycle: caster = every 2 turns, others = every 3 turns
@@ -11874,18 +11892,34 @@ async function doMobAttack(bs,mob,pStats){
       battleLog(`💥 CRITICAL! ${mob.name} crits you for ${mobDmg}${bs.runActive?` (−${STAMINA_PER_CRIT} stamina)`:''}!`,"mob-hit");
       showBattleDmg("player-side","-"+mobDmg,"#ff3030","huge");
       triggerStagger("player-side",true); triggerBattleShake(true);
-      if(bs.playerGuarding)flareGuardFrame("player-side");
     } else {
       battleLog(`${mob.name} hit you for ${mobDmg}${bs.playerGuarding?' (guarded -60%)':''}${archA==="berserker"&&archMult>1?' (enraged!)':''}.`,"mob-hit");
       const sizeCls=dmgSizeClass(mobDmg,pStats.maxHp);
       showBattleDmg("player-side","-"+mobDmg,"#e05050",sizeCls);
       triggerStagger("player-side",sizeCls==="huge");
       if(sizeCls)triggerBattleShake(sizeCls==="huge");
-      if(bs.playerGuarding)flareGuardFrame("player-side");
     }
   }
 
   if(bs.hp<=0){await handlePlayerDeath(bs,mob);return;}
+
+  // ── Mob BLEED tick (end of round) — legacy field from Artisan Poison Arrow
+  // / Rogue Backstab. Ticks here so it lands as the round closes, after the
+  // monster has acted, rather than on the player's next button press.
+  if(bs.bleedTurns>0){
+    const bleedDmg=Math.round(bs.bleedDmg*(pStats.bleedBonus||1));
+    bs.mobHp=Math.max(0,bs.mobHp-bleedDmg);
+    bs.bleedTurns--;
+    battleLog(`🩸 Bleed: ${mob.name} takes ${bleedDmg} damage (${bs.bleedTurns} turns left).`,"player-hit");
+    showBattleDmg("mob-side","-"+bleedDmg+" 🩸","#e02040");
+    if(bs.mobHp<=0){
+      const mobEl=document.querySelector(".mob-side");
+      if(mobEl)mobEl.classList.add("dying");
+      await sleep(680);
+      await buildMobDefeatedSummary(bs,mob);
+      return;
+    }
+  }
 }
 
 // ── PLAYER DEATH HANDLER — offers rest tokens ────────────────────────────
@@ -11993,6 +12027,7 @@ window.startCombatRun=function(){
 const RUN_STAMINA_MAX  = VIGOR_PER_RUN; // a run starts with this much fuel (=cost)
 const STAMINA_PER_KILL = 2;  // -2 per monster -> up to ~50 kills per run
 const STAMINA_PER_CRIT = 10; // -10 each time the player TAKES a critical hit
+const STAMINA_PER_MOB_TURN = 3; // -3 every time the monster acts -> taking fewer hits = deeper runs
 
 // Ends the run gracefully (bank everything, no penalty) the moment stamina hits
 // 0 — but only if the player is still standing (a death handles its own end).
@@ -12353,6 +12388,7 @@ async function maybeBattleLevelUp(bs){
     leveledUp=true;
   }
   if(leveledUp){
+    if(typeof reconcileTalentPoints==="function")reconcileTalentPoints();
     const pStats=getBattlePlayerStats();
     bs.hp=pStats.maxHp;
     bs.wounded=false;
