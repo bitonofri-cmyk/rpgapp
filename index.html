@@ -5547,6 +5547,8 @@ function resetDay(s){
 // (Generation 1 = the original pre-wipe data. 2 = the big quest/combat overhaul.)
 // ═══════════════════════════════════════════════════════════════════════════
 const SAVE_GENERATION = 1;
+// Holds a reference to load()'s _hydrate so _cloudLoad can reuse it (set in load()).
+let _hydrateSave=null;
 
 function load(){
   // ── SAVE GENERATION GATE ──────────────────────────────────────────────────
@@ -5607,15 +5609,28 @@ function load(){
     if(s.profile.questsSetUp===undefined){
       s.profile.questsSetUp=!!(s.profile.name&&Array.isArray(s.profile.focuses)&&s.profile.focuses.length>0);
     }
-    // ── AGRIS REWORK migration (one-time) ──
-    // Old gear catalog was removed. Wipe stale gear references so saves don't
-    // point at items that no longer exist. Runs once, flagged by agrisMigrated.
+    // ── AGRIS REWORK migration (one-time, NON-DESTRUCTIVE) ──
+    // Old gear catalog was removed. We need to clear stale references to items
+    // that no longer exist — but we must NEVER wipe a save that already holds
+    // valid instanced gear ({iid,baseId}), because the agrisMigrated flag has
+    // failed to persist before (e.g. cloud restores that bypass _hydrate),
+    // which caused real inventories to be nuked on every sync. So instead of
+    // trusting the flag alone, we check the actual data: only strip entries
+    // that are NOT valid instanced pieces. Valid gear is always kept.
     if(!s.agrisMigrated){
-      s.gearInventory=[];
-      s.equippedGear={};
-      s.enhanceLevels={};
-      s.gearScraps={};
-      s.failstacks=0;
+      const inv=Array.isArray(s.gearInventory)?s.gearInventory:[];
+      const hasValidGear=inv.some(g=>g&&typeof g==="object"&&g.iid&&g.baseId);
+      if(!hasValidGear){
+        // Nothing worth keeping — safe to clear stale references.
+        s.gearInventory=[];
+        s.equippedGear={};
+        s.enhanceLevels={};
+        s.gearScraps={};
+        s.failstacks=0;
+      }else{
+        // Real instanced gear present — keep it, just drop any junk entries.
+        s.gearInventory=inv.filter(g=>g&&typeof g==="object"&&g.iid&&g.baseId);
+      }
       s.agrisMigrated=true;
     }
     // ── INSTANCED-GEAR migration (one-time) ──
@@ -5639,6 +5654,10 @@ function load(){
     }
     return s;
   };
+  // Expose hydrate so cloud restores can run cloud data through the SAME
+  // migration + normalization path (otherwise cloud saves arrive unmigrated
+  // and the agris flag never gets set — which wiped gear on every sync).
+  _hydrateSave=_hydrate;
   // 1) main slot
   let parsed=_tryParse("lifeRPG_v4");
   if(parsed){
@@ -6239,7 +6258,11 @@ async function _cloudLoad(){
       const localProg=_progressScore(S);
       const localIsFresh=(S.level||1)<=1&&(S.totalGoldEarned||0)===0&&!(S.profile&&S.profile.name);
       const applyCloud=()=>{
-        const s={...BLANK,...cd};
+        // Route cloud data through the SAME hydrate path as a local load so it
+        // gets migrated and flagged (agrisMigrated/gearInstanced). Without this,
+        // cloud saves arrived unmigrated and the next load's migration wiped the
+        // gear — repeatedly. Fall back to the old merge only if hydrate is missing.
+        const s=(typeof _hydrateSave==="function")?_hydrateSave(cd):{...BLANK,...cd};
         if(!s.profile)s.profile={...BLANK.profile};
         if(s.lastReset!==today())resetDay(s);
         S=s;
