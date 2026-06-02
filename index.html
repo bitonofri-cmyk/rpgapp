@@ -11732,12 +11732,9 @@ async function _doMobAttackInner(bs,mob,pStats){
   }
 
   // ── Stamina cost of FACING the monster's turn ──────────────────────────
-  // Every turn the monster actually gets to act burns run stamina, so the
-  // fewer hits you take (kill fast, guard smart, end fights quick) the deeper
-  // a single run can go. A stunned/skipped monster turn above costs nothing.
-  if(bs.runActive){
-    bs.runStamina=Math.max(0,(bs.runStamina||0)-STAMINA_PER_MOB_TURN);
-  }
+  // Stamina drains only when a hit actually lands on you (handled in the
+  // normal-attack branch below): -1 for a normal hit, -5 for a crit. Misses,
+  // dodges, absorbs and telegraph-warning turns cost nothing.
 
   // Telegraph cycle: caster = every 2 turns, others = every 3 turns
   const tg=MOB_TELEGRAPHS[mob.id];
@@ -11770,8 +11767,9 @@ async function _doMobAttackInner(bs,mob,pStats){
       else if(bs.shieldActive){bs.shieldCharges=(bs.shieldCharges||1)-1;if(bs.shieldCharges<=0)bs.shieldActive=false;mobDmg=0;battleLog(`🛡️ Holy Shield absorbed the heavy attack!`,"reward");showBattleDmg("player-side","BLOCKED","#f0c040");}
       else {
         bs.hp=Math.max(0,bs.hp-mobDmg);
+        if(bs.runActive)bs.runStamina=Math.max(0,(bs.runStamina||0)-STAMINA_PER_HIT);
         const tag=bs.playerGuarding?` (guarded -60%)`:'';
-        battleLog(`💥 ${mob.name} unleashes ${tg?.effect?.split(' — ')[0]||'HEAVY ATTACK'} for ${mobDmg}${tag}!`,"mob-hit");
+        battleLog(`💥 ${mob.name} unleashes ${tg?.effect?.split(' — ')[0]||'HEAVY ATTACK'} for ${mobDmg}${tag}${bs.runActive?` (−${STAMINA_PER_HIT} stamina)`:''}!`,"mob-hit");
         const sizeCls=dmgSizeClass(mobDmg,pStats.maxHp)||"big";
         showBattleDmg("player-side","-"+mobDmg,"#e02020",sizeCls);
         triggerBattleShake(true);
@@ -11893,7 +11891,8 @@ async function _doMobAttackInner(bs,mob,pStats){
       showBattleDmg("player-side","-"+mobDmg,"#ff3030","huge");
       triggerStagger("player-side",true); triggerBattleShake(true);
     } else {
-      battleLog(`${mob.name} hit you for ${mobDmg}${bs.playerGuarding?' (guarded -60%)':''}${archA==="berserker"&&archMult>1?' (enraged!)':''}.`,"mob-hit");
+      if(bs.runActive)bs.runStamina=Math.max(0,(bs.runStamina||0)-STAMINA_PER_HIT);
+      battleLog(`${mob.name} hit you for ${mobDmg}${bs.playerGuarding?' (guarded -60%)':''}${archA==="berserker"&&archMult>1?' (enraged!)':''}${bs.runActive?` (−${STAMINA_PER_HIT} stamina)`:''}.`,"mob-hit");
       const sizeCls=dmgSizeClass(mobDmg,pStats.maxHp);
       showBattleDmg("player-side","-"+mobDmg,"#e05050",sizeCls);
       triggerStagger("player-side",sizeCls==="huge");
@@ -12026,8 +12025,8 @@ window.startCombatRun=function(){
 // how strong/tanky you get. Empties -> run ends gracefully (full haul kept).
 const RUN_STAMINA_MAX  = VIGOR_PER_RUN; // a run starts with this much fuel (=cost)
 const STAMINA_PER_KILL = 2;  // -2 per monster -> up to ~50 kills per run
-const STAMINA_PER_CRIT = 10; // -10 each time the player TAKES a critical hit
-const STAMINA_PER_MOB_TURN = 3; // -3 every time the monster acts -> taking fewer hits = deeper runs
+const STAMINA_PER_HIT  = 1;  // -1 every time the monster lands a normal hit on you
+const STAMINA_PER_CRIT = 5;  // -5 when that hit is a critical -> taking fewer hits = deeper runs
 
 // Ends the run gracefully (bank everything, no penalty) the moment stamina hits
 // 0 — but only if the player is still standing (a death handles its own end).
