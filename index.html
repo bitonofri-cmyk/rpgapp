@@ -4346,6 +4346,7 @@ const BLANK={
   customDailyQuests:[],customEpicQuests:[],
   activeDailyIds:[],poolQueue:[],activeHabitIds:[],
   dailyRandomSalt:0,mysteryQuestId:null,mysteryRewardType:null,
+  npcShuffles:{},npcShuffleSalts:{},foundationShuffles:0,
   apiKey:"",
   streak:0,lastStreakDate:null,totalDailyCompleted:0,totalEpicsCompleted:0,streakBrokenAt:0,
   classMechanic:{},
@@ -4717,18 +4718,18 @@ function talentIcon(id,px,fb){const s=TALENT_ICONS[id];return s?`<img src="${s}"
 const TALENT_TREE={
   warrior:{tiers:[
     {req:0, nodes:[
-      {id:"wa_c1", name:"Brutality",       emoji:"💪", type:"combat",       maxRank:5, combat:{dmg:0.03},     perRank:"+3% Attack Power / rank"},
+      {id:"wa_c1", name:"Bloodied Rage",   emoji:"🩸", type:"combat",       maxRank:5, combat:{rageHp:0.015}, perRank:"+1.5% Attack / rank per 15% HP missing"},
       {id:"wa_t2", name:"Blade Training",  emoji:"⚔️", type:"stat",         maxRank:3, bonus:{STR:7},        perRank:"+7 STR"},
       {id:"wa_t1", name:"Iron Hide",       emoji:"🛡️", type:"stat",         maxRank:3, bonus:{VIT:8},        perRank:"+8 VIT"},
     ]},
     {req:5, nodes:[
-      {id:"wa_c2", name:"Toughness",       emoji:"🪨", type:"combat",       maxRank:5, combat:{maxhp:0.04},   perRank:"+4% Max HP / rank"},
+      {id:"wa_c2", name:"Second Wind",     emoji:"💨", type:"combat",       maxRank:1, combat:{secondWind:0.15},   perRank:"First drop below 30% HP: instantly recover 15% HP (once/fight)"},
       {id:"wa_t3", name:"Battle Hunger",   emoji:"🍖", type:"skill_mod",    maxRank:3, skill:"berserker",    perRank:"Berserker Strike heals +5% HP/rank"},
     ]},
     {req:10, nodes:[
       {id:"wa_t4", name:"Tempest Mastery",  emoji:"🌀", type:"skill_unlock", maxRank:1, skill:"tempest",  perRank:"Unlocks Iron Tempest"},
       {id:"wa_t5", name:"Warrior's Resolve",emoji:"❤️", type:"skill_unlock", maxRank:1, skill:"ironwill", perRank:"Unlocks Iron Will"},
-      {id:"wa_c3", name:"Precision",        emoji:"🎯", type:"combat",       maxRank:5, combat:{crit:0.01}, perRank:"+1% Crit Chance / rank"},
+      {id:"wa_c3", name:"Momentum",         emoji:"🌊", type:"combat",       maxRank:3, combat:{momentum:0.02}, perRank:"+2% Attack / rank per consecutive turn without taking damage (max 3 turns)"},
     ]},
     {req:15, nodes:[
       {id:"wa_c5", name:"Bloodforged",      emoji:"🔥", type:"combat",    maxRank:3, combat:{critmult:0.06}, perRank:"+0.06\u00d7 Crit Damage / rank"},
@@ -4750,12 +4751,12 @@ const TALENT_TREE={
   ]},
   sage:{tiers:[
     {req:0, nodes:[
-      {id:"sg_c1", name:"Arcane Power",  emoji:"✨", type:"combat", maxRank:5, combat:{dmg:0.03},  perRank:"+3% Attack Power / rank"},
+      {id:"sg_c1", name:"Overflow",      emoji:"🌊", type:"combat", maxRank:5, combat:{overflow:0.003}, perRank:"+0.3% Attack / rank per 1% Mana above 50%"},
       {id:"sg_t1", name:"Arcane Mind",   emoji:"🧠", type:"stat",   maxRank:3, bonus:{INT:8},      perRank:"+8 INT"},
       {id:"sg_t2", name:"Mystic Focus",  emoji:"🔯", type:"stat",   maxRank:3, bonus:{WP:6},       perRank:"+6 WP"},
     ]},
     {req:5, nodes:[
-      {id:"sg_c2", name:"Mind's Eye",      emoji:"👁️", type:"combat",    maxRank:5, combat:{crit:0.01}, perRank:"+1% Crit Chance / rank"},
+      {id:"sg_c2", name:"Arcane Accumulation",emoji:"🔋", type:"combat",    maxRank:3, combat:{arcaneStack:0.03}, perRank:"Each skill cast: +3% spell dmg / rank (max 5 stacks), consumed on next skill"},
       {id:"sg_t3", name:"Mana Efficiency", emoji:"💧", type:"skill_mod", maxRank:3, skill:"arcane",     perRank:"Arcane Bolt costs -8 mana/rank"},
     ]},
     {req:10, nodes:[
@@ -4770,7 +4771,7 @@ const TALENT_TREE={
     {req:20, nodes:[
       {id:"sg_t7", name:"Void Mastery",  emoji:"🌑", type:"skill_unlock", maxRank:1, skill:"voidpulse", perRank:"Unlocks Void Pulse"},
       {id:"sg_c4", name:"Focused Mind",  emoji:"🧘", type:"combat",       maxRank:3, combat:{mana:3},    perRank:"-3 mana to all skills / rank"},
-      {id:"sg_c7", name:"Penetration",   emoji:"📌", type:"combat",       maxRank:3, combat:{defpen:0.04}, perRank:"+4% Armor Pen / rank"},
+      {id:"sg_c7", name:"Mana Siphon",   emoji:"🩸", type:"combat",       maxRank:3, combat:{manaSiphon:0.07}, perRank:"Killing a mob restores +7% Mana / rank"},
     ]},
     {req:25, nodes:[
       {id:"sg_t8", name:"Echo Cascade", emoji:"🌊", type:"playstyle", maxRank:2, skill:"echo",  perRank:"R1: Arcane Echo always refunds full 50 mana. R2: also applies Burn"},
@@ -4783,12 +4784,12 @@ const TALENT_TREE={
   ]},
   artisan:{tiers:[
     {req:0, nodes:[
-      {id:"ar_c1", name:"Marksman",            emoji:"🏹", type:"combat", maxRank:5, combat:{dmg:0.03},  perRank:"+3% Attack Power / rank"},
+      {id:"ar_c1", name:"Festering Wounds",     emoji:"🦠", type:"combat", maxRank:5, combat:{fester:0.08},  perRank:"Your Bleed/Burn/Poison tick +8% / rank per distinct DoT on the target"},
       {id:"ar_t1", name:"Predator's Eye",      emoji:"🎯", type:"stat",   maxRank:3, bonus:{AGI:8},      perRank:"+8 AGI"},
       {id:"ar_t2", name:"Wilderness Training", emoji:"🏕️", type:"stat",   maxRank:3, bonus:{STR:5,AGI:3},perRank:"+5 STR, +3 AGI"},
     ]},
     {req:5, nodes:[
-      {id:"ar_c2", name:"Keen Eye",     emoji:"🦅", type:"combat",    maxRank:5, combat:{crit:0.01}, perRank:"+1% Crit Chance / rank"},
+      {id:"ar_c2", name:"Hunter's Focus",emoji:"🎯", type:"combat",    maxRank:3, combat:{focus:0.03}, perRank:"+3% Crit / rank per turn vs the same target (resets on swap, max 3)"},
       {id:"ar_t3", name:"Venomous Tips",emoji:"🧪", type:"skill_mod", maxRank:3, skill:"poison",     perRank:"Poison Arrow Bleed lasts +1 turn/rank"},
     ]},
     {req:10, nodes:[
@@ -4803,7 +4804,7 @@ const TALENT_TREE={
     {req:20, nodes:[
       {id:"ar_t7", name:"Trapper's Art", emoji:"🐻", type:"skill_unlock", maxRank:1, skill:"beartrap", perRank:"Unlocks Bear Trap"},
       {id:"ar_c3", name:"Piercing Shots",emoji:"📌", type:"combat",       maxRank:3, combat:{defpen:0.04}, perRank:"+4% Armor Pen / rank"},
-      {id:"ar_c4", name:"Fleet Foot",    emoji:"🐾", type:"combat",       maxRank:3, combat:{eva:0.02},    perRank:"+2% Evasion / rank"},
+      {id:"ar_c4", name:"Trapper's Cunning",emoji:"🪤", type:"combat",       maxRank:3, combat:{trapBonus:0.10},    perRank:"+10% dmg / rank on your next hit after the mob was stunned"},
     ]},
     {req:25, nodes:[
       {id:"ar_t8", name:"Toxic Volley", emoji:"☣️", type:"playstyle", maxRank:2, skill:"poison",   perRank:"R1: Poison Arrow also applies Burn. R2: +15% dmg"},
@@ -4816,12 +4817,12 @@ const TALENT_TREE={
   ]},
   rogue:{tiers:[
     {req:0, nodes:[
-      {id:"ro_c1", name:"Opportunist",    emoji:"🔪", type:"combat", maxRank:5, combat:{dmg:0.03}, perRank:"+3% Attack Power / rank"},
+      {id:"ro_c1", name:"Killing Momentum", emoji:"🔥", type:"combat", maxRank:5, combat:{killBuff:0.04}, perRank:"On kill: +4% dmg / rank for 2 turns (refreshes on chain kills)"},
       {id:"ro_t1", name:"Shadow Training",emoji:"🌑", type:"stat",   maxRank:3, bonus:{AGI:8},     perRank:"+8 AGI"},
       {id:"ro_t2", name:"Street Fighter", emoji:"👊", type:"stat",   maxRank:3, bonus:{WP:6},      perRank:"+6 WP"},
     ]},
     {req:5, nodes:[
-      {id:"ro_c2", name:"Deadly Precision",emoji:"🎯", type:"combat",    maxRank:5, combat:{crit:0.01}, perRank:"+1% Crit Chance / rank"},
+      {id:"ro_c2", name:"Evasive Instinct",emoji:"💨", type:"combat",    maxRank:3, combat:{dodgeCrit:0.15}, perRank:"After a dodge: +15% Crit / rank on your next attack"},
       {id:"ro_t3", name:"Death Mark",      emoji:"💀", type:"skill_mod", maxRank:3, skill:"backstab",   perRank:"Backstab HP threshold: R1 >50%, R2 >40%, R3 any HP"},
     ]},
     {req:10, nodes:[
@@ -4836,7 +4837,7 @@ const TALENT_TREE={
     {req:20, nodes:[
       {id:"ro_t7", name:"Flurry Mastery",    emoji:"🌪️", type:"skill_unlock", maxRank:1, skill:"flurry", perRank:"Unlocks Shadow Flurry"},
       {id:"ro_c4", name:"Shadowstep",        emoji:"👤", type:"combat",       maxRank:3, combat:{eva:0.02},   perRank:"+2% Evasion / rank"},
-      {id:"ro_c5", name:"Exposed Weakness",  emoji:"📍", type:"combat",       maxRank:3, combat:{defpen:0.04},perRank:"+4% Armor Pen / rank"},
+      {id:"ro_c5", name:"Exposed",           emoji:"🎯", type:"combat",       maxRank:3, combat:{exposed:0.04, exposedPen:0.50},perRank:"+4% dmg / rank vs bleeding targets; ignore 50% armor (R1+)"},
     ]},
     {req:25, nodes:[
       {id:"ro_t8", name:"Hemorrhage",   emoji:"🔪", type:"playstyle", maxRank:2, skill:"crimson", perRank:"R1: Crimson Strike on bleeding target also applies Poison. R2: +10% dmg"},
@@ -4854,13 +4855,13 @@ const TALENT_TREE={
       {id:"mk_t2", name:"Sacred Body",     emoji:"🧘", type:"stat",   maxRank:3, bonus:{VIT:6},       perRank:"+6 VIT"},
     ]},
     {req:5, nodes:[
-      {id:"mk_c4", name:"Inner Strength", emoji:"☀️", type:"combat",    maxRank:5, combat:{dmg:0.03}, perRank:"+3% Attack Power / rank"},
+      {id:"mk_c4", name:"Flowing Spirit", emoji:"🌀", type:"combat",    maxRank:5, combat:{overshield:0.04}, perRank:"Overheal converts to a shield, up to +4% max HP / rank"},
       {id:"mk_t3", name:"Shield of Faith",emoji:"🛡️", type:"skill_mod", maxRank:3, skill:"shield",    perRank:"Holy Shield stun chance +10%/rank"},
     ]},
     {req:10, nodes:[
       {id:"mk_t4", name:"Mending Arts", emoji:"🌿", type:"skill_unlock", maxRank:1, skill:"mend",  perRank:"Unlocks Soul Mend"},
       {id:"mk_t5", name:"Karmic Path",  emoji:"☯️", type:"skill_unlock", maxRank:1, skill:"karma", perRank:"Unlocks Karmic Strike"},
-      {id:"mk_c6", name:"Zeal",         emoji:"✋", type:"combat",       maxRank:5, combat:{crit:0.01}, perRank:"+1% Crit Chance / rank"},
+      {id:"mk_c6", name:"Karmic Balance",emoji:"☯️", type:"combat",       maxRank:3, combat:{karmaDmg:0.05}, perRank:"+5% dmg / rank for each harmful status on the enemy"},
     ]},
     {req:15, nodes:[
       {id:"mk_c2", name:"Stone Skin", emoji:"🪨", type:"combat",    maxRank:3, combat:{dr:0.02}, perRank:"+2% Damage Reduction / rank"},
@@ -4869,7 +4870,7 @@ const TALENT_TREE={
     {req:20, nodes:[
       {id:"mk_t7", name:"Celestial Arts",emoji:"✨", type:"skill_unlock", maxRank:1, skill:"surge", perRank:"Unlocks Celestial Surge"},
       {id:"mk_c3", name:"Radiance",      emoji:"🌅", type:"combat",       maxRank:3, combat:{heal:0.05}, perRank:"+5% Healing / rank"},
-      {id:"mk_c5", name:"Meditation",    emoji:"🕉️", type:"combat",       maxRank:3, combat:{mana:3},    perRank:"-3 mana to all skills / rank"},
+      {id:"mk_c5", name:"Meditative Calm",    emoji:"🧘", type:"combat",       maxRank:1, combat:{calm:1}, perRank:"Take no damage for 2 turns: your next skill costs 0 resource"},
     ]},
     {req:25, nodes:[
       {id:"mk_t8", name:"Tranquil Mending",emoji:"💚", type:"skill_mod", maxRank:3, skill:"mend",  perRank:"Soul Mend heals +8% HP/rank"},
@@ -5224,11 +5225,16 @@ function assignFocusesFromAnswers(answers){
   return focuses.slice(0,3);
 }
 
-function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+// Daily reset happens at midnight. "Logical day" = wall clock minus DAY_RESET_HOUR
+// hours; with the hour at 0 the logical day equals the calendar day. All day-keyed
+// reset logic routes through these helpers so the boundary stays consistent everywhere.
+const DAY_RESET_HOUR=0;
+function logicalNow(){const d=new Date();d.setHours(d.getHours()-DAY_RESET_HOUR);return d;}
+function today(){const d=logicalNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function getTierIndex(lvl){for(let i=TIERS.length-1;i>=0;i--){if(lvl>=TIERS[i].level)return i+1;}return 1;}
 function getTier(lvl){return TIERS[getTierIndex(lvl)-1];}
 function dateSeed(name=""){
-  const d=new Date();
+  const d=logicalNow();
   const base=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
   let nameSalt=0;for(let i=0;i<name.length;i++)nameSalt=(nameSalt*31+name.charCodeAt(i))>>>0;
   return(base+nameSalt)>>>0;
@@ -5316,6 +5322,45 @@ function getActiveHabits(){
   _refillActiveHabits();
   return (S.activeHabitIds||[]).map(id=>HABIT_POOL_ALL.find(h=>h.id===id)).filter(Boolean);
 }
+
+// Foundation shuffle — reroll the current uncompleted foundation habits for a
+// fresh set. Capped per day so the real-life gate stays meaningful (the player
+// can't fish endlessly for the easiest possible pair). Completed-today habits
+// stay; only the live, undone slots reroll.
+const FOUNDATION_SHUFFLE_CAP=3;
+function foundationShufflesLeft(){
+  return Math.max(0,FOUNDATION_SHUFFLE_CAP-(S.foundationShuffles||0));
+}
+window.shuffleFoundations=function(){
+  if(foundationShufflesLeft()<=0){
+    toast("No shuffles left","You've used all 3 shuffles today. Fresh set tomorrow.");
+    return;
+  }
+  if(!Array.isArray(S.activeHabitIds))S.activeHabitIds=[];
+  const done=new Set(S.dailyCompleted||[]);
+  // Remember what we're clearing so we can try to avoid handing back the same pair.
+  const prev=S.activeHabitIds.filter(id=>!done.has(id));
+  if(prev.length===0){
+    toast("Nothing to shuffle","No active foundations to reroll right now.");
+    return;
+  }
+  // Clear the uncompleted active slots.
+  S.activeHabitIds=S.activeHabitIds.filter(id=>done.has(id));
+  // Refill, biasing away from the just-dropped habits when possible.
+  let guard=0;
+  while(S.activeHabitIds.length<HABITS_VISIBLE && guard++<80){
+    const pool=_eligibleHabitIds(true);
+    if(pool.length===0)break;
+    const fresh=pool.filter(id=>!prev.includes(id));
+    const usePool=fresh.length?fresh:pool;
+    const pick=usePool[Math.floor(Math.random()*usePool.length)];
+    S.activeHabitIds.push(pick);
+  }
+  S.foundationShuffles=(S.foundationShuffles||0)+1;
+  const left=foundationShufflesLeft();
+  save();render();
+  toast("Foundations shuffled",`A fresh set of daily habits. ${left} shuffle${left===1?"":"s"} left today.`);
+};
 
 function milestoneParticles(color){
   const wrap=document.createElement("div");
@@ -5457,6 +5502,7 @@ function resetDay(s){
   }
   s.dailyCompleted=[];s.lastReset=t;
   s.activeHabitIds=[]; // fresh foundation habits each new day
+  s.foundationShuffles=0; // daily shuffle allowance resets
   s.firstQuestDone=false;
   s.spellUsedToday=false;
   s.spellTargetId=null;
@@ -5465,6 +5511,9 @@ function resetDay(s){
 
   // Daily random salt — breaks pure determinism so quests feel fresh each day
   s.dailyRandomSalt=Math.floor(Math.random()*99999);
+  // Per-NPC shuffle allowances and salts reset each day
+  s.npcShuffles={};
+  s.npcShuffleSalts={};
 
   // Difficulty distribution per tier
   const ti=getTierIndex(s.level);
@@ -8433,6 +8482,7 @@ function renderQuests(){
   return`<div class="card">
     <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:${clColor};text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:6px">
       <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>${sectionLabel}${habitDone>0?` · ${habitDone} done today`:""}
+      ${habits.length?(()=>{const shufLeft=foundationShufflesLeft();const shufDisabled=shufLeft<=0;return`<button onclick="shuffleFoundations()" ${shufDisabled?"disabled":""} title="${shufDisabled?"No shuffles left today":"Swap these for new daily habits — "+shufLeft+" left today"}" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:0.5px;font-family:'Nunito',sans-serif;border-radius:8px;border:1px solid ${shufDisabled?"var(--card-border)":clColor+"66"};background:${shufDisabled?"var(--bg2)":clColor+"14"};color:${shufDisabled?"var(--text-dim)":clColor};cursor:${shufDisabled?"not-allowed":"pointer"};opacity:${shufDisabled?0.6:1};-webkit-tap-highlight-color:transparent">🔀 Shuffle${shufDisabled?"":" ("+shufLeft+")"}</button>`;})():""}
     </div>
     ${habitRows}
     ${activeQuests.length?`
@@ -8564,7 +8614,8 @@ function getNPCDailyPool(npc){
   const ti=getTierIndex(S.level);
   let npcHash=0;
   for(let i=0;i<npc.id.length;i++)npcHash=(npcHash*31+npc.id.charCodeAt(i))>>>0;
-  const seed=(dateSeed(S.profile?.name||"")+(S.dailyRandomSalt||0)+npcHash)>>>0;
+  const npcSalt=(S.npcShuffleSalts&&S.npcShuffleSalts[npc.id])||0;
+  const seed=(dateSeed(S.profile?.name||"")+(S.dailyRandomSalt||0)+npcHash+npcSalt)>>>0;
   // Focus gate: an NPC hands out DAILIES only if its domain overlaps the
   // player's chosen focus areas. (Epics stay visible regardless.)
   const myFocuses=new Set(S.profile?.focuses||[]);
@@ -8583,6 +8634,30 @@ function getNPCDailyPool(npc){
   if(fitnessNudge){ pool=pool.filter(q=>q.diff==="Easy"); count=2; } // gentle starters
   return seededShuffle(pool,seed).slice(0,count);
 }
+
+// Per-NPC quest shuffle — reroll one NPC's daily offers so players can fish for
+// quests that suit them. Capped per NPC per day (same spirit as the foundation
+// shuffle: the real-life gate stays meaningful). Each NPC tracks its own count
+// and its own salt, so shuffling Kael never disturbs Lyra's board.
+const NPC_SHUFFLE_CAP=3;
+function npcShufflesLeft(npcId){
+  const used=(S.npcShuffles&&S.npcShuffles[npcId])||0;
+  return Math.max(0,NPC_SHUFFLE_CAP-used);
+}
+window.shuffleNPCQuests=function(npcId){
+  if(npcShufflesLeft(npcId)<=0){
+    toast("No shuffles left","You've rerolled this NPC 3 times today. Fresh offers tomorrow.");
+    return;
+  }
+  if(!S.npcShuffleSalts||typeof S.npcShuffleSalts!=="object")S.npcShuffleSalts={};
+  if(!S.npcShuffles||typeof S.npcShuffles!=="object")S.npcShuffles={};
+  // New salt -> a different deterministic shuffle of this NPC's pool.
+  S.npcShuffleSalts[npcId]=(S.npcShuffleSalts[npcId]||0)+Math.floor(Math.random()*90000+1000);
+  S.npcShuffles[npcId]=(S.npcShuffles[npcId]||0)+1;
+  const left=npcShufflesLeft(npcId);
+  save();render();
+  toast("Offers shuffled",`A fresh set of quests. ${left} shuffle${left===1?"":"s"} left for this NPC today.`);
+};
 
 // Returns the daily + epic quests this NPC currently offers, plus any locked epics.
 // Dailies rotate each day via getNPCDailyPool. Epics stay always-visible since
@@ -8822,8 +8897,11 @@ function renderNPCDetail(npc){
 
       ${dailyRows?`
         ${activeRows?`<div style="border-top:1px solid var(--card-border);margin:14px -16px"></div>`:""}
-        <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:${npc.color};text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px${activeRows?";margin-top:14px":""}">
-          <span style="width:6px;height:6px;border-radius:50%;background:${npc.color};display:inline-block"></span>Today's Offers (${dailies.length})
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px${activeRows?";margin-top:14px":""}">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:${npc.color};text-transform:uppercase;display:flex;align-items:center;gap:6px">
+            <span style="width:6px;height:6px;border-radius:50%;background:${npc.color};display:inline-block"></span>Today's Offers (${dailies.length})
+          </div>
+          ${(()=>{const sl=npcShufflesLeft(npc.id);const dis=sl<=0;return`<button onclick="shuffleNPCQuests('${npc.id}')" ${dis?"disabled":""} title="${dis?"No shuffles left today":"Reroll "+npc.name+"'s offers — "+sl+" left today"}" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;font-size:10px;font-weight:800;letter-spacing:0.5px;font-family:'Nunito',sans-serif;border-radius:8px;border:1px solid ${dis?"var(--card-border)":npc.color+"66"};background:${dis?"var(--bg2)":npc.color+"14"};color:${dis?"var(--text-dim)":npc.color};cursor:${dis?"not-allowed":"pointer"};opacity:${dis?0.6:1};-webkit-tap-highlight-color:transparent">🔀 Shuffle${dis?"":" ("+sl+")"}</button>`;})()}
         </div>
         <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;font-style:italic">🔄 New picks every day — check back tomorrow</div>
         ${dailyRows}
@@ -10599,6 +10677,58 @@ function recommendedGearScore(zone,sub){
   return hit?hit.b:null;
 }
 
+// Warrior Second Wind (wa_c2): the FIRST time the player crosses below 30% HP in
+// a fight, instantly recover 15% max HP. Once per fight (bs.secondWindUsed).
+function maybeSecondWind(bs,pStats,hpBefore){
+  if(!bs||bs.secondWindUsed)return;
+  if(getActiveClass()!=="warrior")return;
+  const rank=getTalentRank("wa_c2");
+  if(rank<=0)return;
+  const maxHp=pStats.maxHp||1;
+  const threshold=maxHp*0.30;
+  // Only trigger on the crossing: was above 30%, now at/below it, still alive.
+  if(hpBefore>threshold && bs.hp<=threshold && bs.hp>0){
+    const heal=Math.round(maxHp*0.15);
+    bs.hp=Math.min(maxHp,bs.hp+heal);
+    bs.secondWindUsed=true;
+    if(typeof battleLog==="function")battleLog(`💨 Second Wind! You catch your breath and recover ${heal} HP.`,"reward");
+    if(typeof showBattleDmg==="function")showBattleDmg("player-side","+"+heal,"#80f0a0","heal");
+    if(typeof triggerHealRipple==="function")triggerHealRipple();
+  }
+}
+
+// Monk Flowing Spirit (mk_c4): healing past full HP banks the excess as a shield,
+// capped at overshieldCap (% max HP). Returns the actual HP gained (for display).
+// For non-Monk or untalented players this is a plain heal (no banking).
+function applyHealWithOvershield(bs,pStats,heal){
+  const maxHp=pStats.maxHp||1;
+  const before=bs.hp;
+  const after=Math.min(maxHp,before+heal);
+  bs.hp=after;
+  const overheal=Math.max(0,(before+heal)-maxHp);
+  if(overheal>0 && getActiveClass()==="monk" && getTalentRank("mk_c4")>0){
+    const cap=pStats.overshieldCap||0;
+    if(cap>0){
+      bs.overshield=Math.min(cap,(bs.overshield||0)+overheal);
+    }
+  }
+  return after-before;
+}
+
+// Monk Flowing Spirit: the banked overheal shield soaks incoming damage first.
+// Returns the damage remaining after the shield is drained.
+function absorbWithShield(bs,dmg){
+  if(!bs||(bs.overshield||0)<=0||dmg<=0)return dmg;
+  const absorbed=Math.min(bs.overshield,dmg);
+  bs.overshield-=absorbed;
+  const left=dmg-absorbed;
+  if(absorbed>0){
+    if(typeof showBattleDmg==="function")showBattleDmg("player-side","🌀 -"+absorbed,"#80e0ff");
+    if(typeof battleLog==="function")battleLog(`🌀 Flowing Spirit shield absorbs ${absorbed} damage${bs.overshield>0?` (${bs.overshield} left)`:""}.`,"reward");
+  }
+  return left;
+}
+
 function getBattlePlayerStats(){
   const cls=getActiveClass();
   const scaling=CLASS_SCALING[cls]||CLASS_SCALING.warrior;
@@ -10648,7 +10778,69 @@ function getBattlePlayerStats(){
   if(tcm.eva)      evasion    = (evasion||0)+tcm.eva;
   if(tcm.defpen)   mobDefPen  = (mobDefPen||0)+tcm.defpen;
 
-  return{atk,def,maxHp,critChance,critMult,dmgReduce,evasion,mobDefPen,bleedBonus,bleedExtra,healBonus};
+  // ── Conditional (playstyle) talent passives — read LIVE fight state ──
+  // These keys come from signature nodes; they scale with what's happening in
+  // the current fight rather than being flat. Warrior pilot set:
+  const bs=S.battleState;
+  if(bs){
+    // Bloodied Rage (wa_c1): +rageHp Attack for each 15% HP currently missing.
+    if(tcm.rageHp){
+      const curHp=(bs.hp==null)?maxHp:bs.hp;
+      const missingFrac=Math.max(0,1-(curHp/Math.max(1,maxHp)));
+      const chunks=missingFrac/0.15;                 // how many 15% bands are missing
+      const rageMult=1+tcm.rageHp*chunks;            // tcm.rageHp already ×rank
+      atk=Math.max(1,Math.round(atk*rageMult));
+    }
+    // Momentum (wa_c3): +momentum Attack per consecutive clean turn, capped at 3.
+    if(tcm.momentum){
+      const clean=Math.min(3,bs.cleanTurns||0);
+      if(clean>0)atk=Math.max(1,Math.round(atk*(1+tcm.momentum*clean)));
+    }
+    // ── Sage ──
+    // Overflow (sg_c1): +overflow Attack per 1% Mana above 50%.
+    if(tcm.overflow){
+      const rmax=(CLASS_RESOURCES[cls]||{}).max||100;
+      const manaPct=Math.max(0,Math.min(100,((bs.resource||0)/rmax)*100));
+      const above=Math.max(0,manaPct-50);
+      if(above>0)atk=Math.max(1,Math.round(atk*(1+tcm.overflow*above)));
+    }
+    // Arcane Accumulation (sg_c2): banked stacks add spell dmg (consumed on next skill in combat code).
+    if(tcm.arcaneStack){
+      const stacks=Math.min(5,bs.arcaneStacks||0);
+      if(stacks>0)atk=Math.max(1,Math.round(atk*(1+tcm.arcaneStack*stacks)));
+    }
+    // ── Hunter / Artisan ──
+    // Hunter's Focus (ar_c2): +focus Crit per turn vs the same target, capped at 3.
+    if(tcm.focus){
+      const ft=Math.min(3,bs.focusTurns||0);
+      if(ft>0)critChance=Math.min(critChance+tcm.focus*ft, cls==="rogue"?0.50:0.40);
+    }
+    // Trapper's Cunning (ar_c4): +trapBonus dmg on the next hit after a stun (flag set on stun).
+    if(tcm.trapBonus&&bs.trapPrimed){
+      atk=Math.max(1,Math.round(atk*(1+tcm.trapBonus)));
+    }
+    // ── Rogue ──
+    // Killing Momentum (ro_c1): kill grants a temporary attack buff for 2 turns.
+    if(tcm.killBuff&&(bs.killBuffTurns||0)>0){
+      atk=Math.max(1,Math.round(atk*(1+tcm.killBuff)));
+    }
+    // Evasive Instinct (ro_c2): +dodgeCrit Crit on the next attack after a dodge.
+    if(tcm.dodgeCrit&&bs.dodgePrimed){
+      critChance=Math.min(critChance+tcm.dodgeCrit, 0.50);
+    }
+    // ── Monk ──
+    // Karmic Balance (mk_c6): +karmaDmg per harmful status currently on the mob.
+    if(tcm.karmaDmg){
+      const sc=((bs.mobBurnTurns||0)>0?1:0)+((bs.mobPoisonTurns||0)>0?1:0)+((bs.bleedTurns||0)>0?1:0)+((bs.mobStunTurns||0)>0?1:0);
+      if(sc>0)atk=Math.max(1,Math.round(atk*(1+tcm.karmaDmg*sc)));
+    }
+  }
+
+  // Flowing Spirit (mk_c4): expose the overheal→shield cap (%maxHp) so heal code can bank it.
+  const _flow=getTalentCombatMods();
+  const overshieldCap=(_flow.overshield)?Math.round(maxHp*_flow.overshield):0;
+
+  return{atk,def,maxHp,critChance,critMult,dmgReduce,evasion,mobDefPen,bleedBonus,bleedExtra,healBonus,overshieldCap};
 }
 
 function getBattleMobsForZone(zone){return BATTLE_MOBS.filter(m=>m.zone===zone);}
@@ -10686,6 +10878,16 @@ function initBattleState(){
   if(bs.runStamina===undefined)bs.runStamina=0;
   if(bs.zoneGoldEarned===undefined)bs.zoneGoldEarned=0;
   if(bs.playerStunned===undefined)bs.playerStunned=0;
+  if(bs.cleanTurns===undefined)bs.cleanTurns=0;        // consecutive turns w/o taking damage (Warrior Momentum)
+  if(bs.secondWindUsed===undefined)bs.secondWindUsed=false; // once-per-fight Second Wind
+  if(bs.arcaneStacks===undefined)bs.arcaneStacks=0;    // Sage Arcane Accumulation
+  if(bs.focusTurns===undefined)bs.focusTurns=0;        // Hunter's Focus (same-target streak)
+  if(bs.focusTarget===undefined)bs.focusTarget=null;
+  if(bs.trapPrimed===undefined)bs.trapPrimed=false;    // Trapper's Cunning (post-stun next hit)
+  if(bs.killBuffTurns===undefined)bs.killBuffTurns=0;  // Rogue Killing Momentum
+  if(bs.dodgePrimed===undefined)bs.dodgePrimed=false;  // Rogue Evasive Instinct
+  if(bs.overshield===undefined)bs.overshield=0;        // Monk Flowing Spirit banked shield
+  if(bs.calmTurns===undefined)bs.calmTurns=0;          // Monk Meditative Calm clean-turn counter
   if(bs.subzone===undefined)bs.subzone=1;
   // Validate current mob exists in the right pool for this zone.
   // (Bosses now live only in dungeons — open-world is normal + elite mobs.)
@@ -10951,16 +11153,7 @@ function getMobObj(bs){
   return mob;
 }
 
-function getTodayDateStr(){return new Date().toISOString().slice(0,10);}
-
-function refreshRestTokens(){
-  if(!S.combatRestTokens)S.combatRestTokens={count:2,resetDate:null};
-  const today=getTodayDateStr();
-  if(S.combatRestTokens.resetDate!==today){
-    S.combatRestTokens.count=2;
-    S.combatRestTokens.resetDate=today;
-  }
-}
+function getTodayDateStr(){return today();}
 
 async function doBattleAction(action){
   // action: "strike" | "guard" | "slam" | "skill"
@@ -10981,6 +11174,23 @@ async function doBattleAction(action){
   if(bs.hp<=0)return;
   if(!bs.runActive){ toast("Start a run first",`Tap Start Run to spend ${VIGOR_PER_RUN} Vigor and enter the gauntlet.`); return; }
   if(maybeEndRunOnStamina(bs)){ save(); render(); return; }
+
+  // ── Hunter's Focus (ar_c2): build a same-target streak BEFORE stats compute,
+  // so the crit bonus applies on this turn. Reset when the target changes.
+  {
+    const _cls=getActiveClass();
+    if(_cls==="artisan"&&getTalentRank("ar_c2")>0){
+      const curMobId=bs.mobId;
+      if(bs.focusTarget===curMobId){bs.focusTurns=Math.min(3,(bs.focusTurns||0)+1);}
+      else {bs.focusTarget=curMobId;bs.focusTurns=1;}
+    }
+    // Trapper's Cunning (ar_c4): if the mob is currently stunned, prime the next-hit bonus.
+    if(_cls==="artisan"&&getTalentRank("ar_c4")>0&&(bs.mobStunTurns||0)>0){
+      bs.trapPrimed=true;
+    }
+    // Rogue Killing Momentum (ro_c1): tick down the post-kill attack buff.
+    if(_cls==="rogue"&&(bs.killBuffTurns||0)>0){bs.killBuffTurns--;}
+  }
 
   const pStats=getBattlePlayerStats();
   const mob=getMobObj(bs);
@@ -11049,9 +11259,20 @@ async function doBattleAction(action){
     if(bs.hp<=0){await handlePlayerDeath(bs,mob);bs.combatLocked=false;save();render();return;}
   }
 
+  // ── Hunter Festering Wounds (ar_c1): DoT ticks scale with how many distinct
+  // DoTs are on the target. Computed once per player turn, applied to each tick.
+  let festerMult=1;
+  if(cls==="artisan"){
+    const fr=getTalentRank("ar_c1");
+    if(fr>0){
+      const distinct=((bs.mobBurnTurns||0)>0?1:0)+((bs.mobPoisonTurns||0)>0?1:0)+((bs.bleedTurns||0)>0?1:0);
+      if(distinct>0)festerMult=1+0.08*fr*distinct;
+    }
+  }
+
   // ── Mob BURN tick (orange flames eat through HP) ────────────────────────
   if((bs.mobBurnTurns||0)>0){
-    const burnDmg=bs.mobBurnDmg||0;
+    const burnDmg=Math.round((bs.mobBurnDmg||0)*festerMult);
     bs.mobHp=Math.max(0,bs.mobHp-burnDmg);
     bs.mobBurnTurns--;
     battleLog(`🔥 Burn: ${mob.name} takes ${burnDmg} fire damage (${bs.mobBurnTurns} turns left).`,"player-hit");
@@ -11066,7 +11287,7 @@ async function doBattleAction(action){
 
   // ── Mob POISON tick ─────────────────────────────────────────────────────
   if((bs.mobPoisonTurns||0)>0){
-    const pd=bs.mobPoisonDmg||0;
+    const pd=Math.round((bs.mobPoisonDmg||0)*festerMult);
     bs.mobHp=Math.max(0,bs.mobHp-pd);
     bs.mobPoisonTurns--;
     battleLog(`☠️ Poison: ${mob.name} takes ${pd} damage (${bs.mobPoisonTurns} turns left).`,"player-hit");
@@ -11099,6 +11320,8 @@ async function doBattleAction(action){
   // ── Class skill activation — requires resource AND cooldown ready ────────
   let skillActivated=false;
   let activeSkill=null;
+  // Sage Arcane Accumulation decays if you don't cast a skill this turn.
+  if(getActiveClass()==="sage"&&!action.startsWith("skill")){bs.arcaneStacks=0;}
   if(action.startsWith("skill")){
     // action format: "skill:<id>" or legacy "skill" → resolve to first unlocked skill
     let skillId=action.includes(":")?action.split(":")[1]:null;
@@ -11130,6 +11353,17 @@ async function doBattleAction(action){
     // Legacy: also keep the global cd field synced when casting the core skill
     if(activeSkill.id===skill?.id)bs.skillCooldown=activeSkill.cd;
     skillActivated=true;
+    // Monk Meditative Calm (mk_c5): if 2 clean turns banked a free cast, refund the cost.
+    if(cls==="monk"&&getTalentRank("mk_c5")>0&&bs._calmReady){
+      bs.resource=Math.min((CLASS_RESOURCES[cls]||{}).max||100, bs.resource+cost);
+      bs._calmReady=false; bs.calmTurns=0;
+      battleLog(`🧘 Meditative Calm — your focus makes this skill free.`,"reward");
+    }
+    // Sage Arcane Accumulation (sg_c2): this cast already benefited from banked
+    // stacks (read at stats-time); consume them, then bank one fresh stack.
+    if(cls==="sage"&&getTalentRank("sg_c2")>0){
+      bs.arcaneStacks=Math.min(5,(bs.arcaneStacks||0)+1);
+    } else if(cls==="sage"){ bs.arcaneStacks=0; }
     // Level-1 skill VFX (we have art for each class's first/core skill).
     if(activeSkill.id===skill?.id && typeof triggerSkillFx==="function")triggerSkillFx(cls);
     // Full-screen color flash in the class color
@@ -11422,14 +11656,15 @@ async function doBattleAction(action){
       const healMult=getHealMult(bs,"player");
       const mendPct=0.20+0.08*getTalentRank("mk_t8");
       const heal=Math.round(pStats.maxHp*mendPct*(1+(pStats.healBonus||0))*getMonkHealBonus()*healMult);
-      bs.hp=Math.min(pStats.maxHp,bs.hp+heal);
+      const gained=applyHealWithOvershield(bs,pStats,heal);
+      const shieldTxt=(bs.overshield>0)?` 🌀 Shield: ${bs.overshield}.`:"";
       const cleansed=[];
       if((bs.playerBurnTurns||0)>0){bs.playerBurnTurns=0;cleansed.push("Burn");}
       if((bs.playerPoisonTurns||0)>0){bs.playerPoisonTurns=0;cleansed.push("Poison");}
       if((bs.playerBleedTurns||0)>0){bs.playerBleedTurns=0;cleansed.push("Bleed");}
       const cleanseTxt=cleansed.length?` Cleansed: ${cleansed.join(", ")}.`:"";
-      battleLog(`🌿 Soul Mend! +${heal} HP.${cleanseTxt}${healMult<1?' (-30% from burn)':''}`,"reward");
-      showBattleDmg("player-side","+"+heal,"#80f0a0","heal");
+      battleLog(`🌿 Soul Mend! +${gained} HP.${cleanseTxt}${shieldTxt}${healMult<1?' (-30% from burn)':''}`,"reward");
+      showBattleDmg("player-side","+"+gained,"#80f0a0","heal");
       triggerHealRipple();
       playerDmg=0;
     } else if(eff==="karma"){
@@ -11508,10 +11743,11 @@ async function doBattleAction(action){
       // Monk: heal 25% HP + absorb next mob attack completely
       const healMult=getHealMult(bs,"player");
       const heal=Math.round(pStats.maxHp*0.25*(1+(pStats.healBonus||0))*getMonkHealBonus()*healMult);
-      bs.hp=Math.min(pStats.maxHp,bs.hp+heal);
+      const gained=applyHealWithOvershield(bs,pStats,heal);
       bs.surgeAbsorb=true; // fully negates next mob attack
-      battleLog(`✨ Celestial Surge! +${heal} HP and you'll absorb the next attack completely.${healMult<1?' (-30% from burn)':''}`,"reward");
-      showBattleDmg("player-side","+"+heal,"#a0f0ff","heal big");
+      const shieldTxt=(bs.overshield>0)?` 🌀 Shield: ${bs.overshield}.`:"";
+      battleLog(`✨ Celestial Surge! +${gained} HP and you'll absorb the next attack completely.${shieldTxt}${healMult<1?' (-30% from burn)':''}`,"reward");
+      showBattleDmg("player-side","+"+gained,"#a0f0ff","heal big");
       showBattleDmg("player-side","✨ ABSORB","#a0f0ff");
       triggerHealRipple();
       playerDmg=0;
@@ -11540,6 +11776,28 @@ async function doBattleAction(action){
     playerDmg=Math.round(playerDmg*(1+amt));
     bs.playerTripwireBonus=false;
     battleLog(`🪤 Trip Wire setup pays off! +${Math.round(amt*100)}% damage.`,"crit");
+  }
+
+  // ── Rogue Exposed (ro_c5): bonus damage vs a bleeding target ─────────────
+  if(playerDmg>0 && cls==="rogue"){
+    const exRank=getTalentRank("ro_c5");
+    if(exRank>0){
+      const mobBleeding=(bs.bleedTurns||0)>0||(bs.mobPoisonTurns||0)>0||(bs.mobBurnTurns||0)>0;
+      if(mobBleeding){
+        playerDmg=Math.round(playerDmg*(1+0.04*exRank)); // +4%/rank vs bleeding
+      }
+    }
+  }
+
+  // ── Hunter Trapper's Cunning (ar_c4): consume the post-stun primed hit ───
+  if(playerDmg>0 && bs.trapPrimed){
+    // The damage bonus was already folded into pStats.atk this turn; clear the prime.
+    bs.trapPrimed=false;
+    battleLog(`🪤 Trapper's Cunning! You strike the staggered foe harder.`,"crit");
+  }
+  // ── Rogue Evasive Instinct (ro_c2): consume the dodge-primed crit boost ──
+  if(playerDmg>0 && bs.dodgePrimed){
+    bs.dodgePrimed=false; // crit chance was already boosted in pStats this turn
   }
 
   // ── Phantom Step guaranteed crit on next strike ─────────────────────────
@@ -11650,6 +11908,19 @@ async function doBattleAction(action){
   // ── Mob defeated? ────────────────────────────────────────────────────────
   if(bs.mobHp<=0){
     logCombatOutcome(true); // record win for Recommended Gear Score
+    // ── On-kill signature passives ──
+    // Rogue Killing Momentum (ro_c1): refresh a 2-turn attack buff on each kill.
+    if(cls==="rogue"&&getTalentRank("ro_c1")>0){bs.killBuffTurns=2;}
+    // Sage Mana Siphon (sg_c7): killing a mob restores mana.
+    if(cls==="sage"){
+      const msRank=getTalentRank("sg_c7");
+      if(msRank>0){
+        const rmax=(CLASS_RESOURCES[cls]||{}).max||100;
+        const gain=Math.round(rmax*0.07*msRank);
+        bs.resource=Math.min(rmax,(bs.resource||0)+gain);
+        battleLog(`🩸 Mana Siphon restores ${gain} Mana.`,"reward");
+      }
+    }
     // Record zone-boss defeat (gates entry to the next zone).
     if((mob.id||"").startsWith("boss_")){
       const bz=parseInt((mob.id||"").replace("boss_z",""),10);
@@ -11723,11 +11994,13 @@ async function doMobAttack(bs,mob,pStats){
 }
 
 async function _doMobAttackInner(bs,mob,pStats){
+  const _hpAtTurnStart=(bs.hp==null)?pStats.maxHp:bs.hp; // for Warrior Momentum: did we take damage this turn?
   // ── Mob stunned? Skip turn entirely (and clear telegraph counter) ─────
   if((bs.mobStunTurns||0)>0){
     bs.mobStunTurns--;
     battleLog(`⚡ ${mob.name} is stunned and can't act!`,"reward");
     showBattleDmg("mob-side","STUNNED","#ffd040");
+    bs.cleanTurns=(bs.cleanTurns||0)+1; // no damage taken (mob skipped) — Momentum builds
     return;
   }
 
@@ -11766,7 +12039,11 @@ async function _doMobAttackInner(bs,mob,pStats){
       if(bs.surgeAbsorb){bs.surgeAbsorb=false;mobDmg=0;battleLog(`✨ Celestial Surge absorbed the heavy attack!`,"reward");showBattleDmg("player-side","ABSORBED","#a0f0ff");}
       else if(bs.shieldActive){bs.shieldCharges=(bs.shieldCharges||1)-1;if(bs.shieldCharges<=0)bs.shieldActive=false;mobDmg=0;battleLog(`🛡️ Holy Shield absorbed the heavy attack!`,"reward");showBattleDmg("player-side","BLOCKED","#f0c040");}
       else {
+        mobDmg=absorbWithShield(bs,mobDmg);
+        const _hpBeforeHeavy=bs.hp;
         bs.hp=Math.max(0,bs.hp-mobDmg);
+        if(mobDmg>0)bs.cleanTurns=0;
+        maybeSecondWind(bs,pStats,_hpBeforeHeavy);
         if(bs.runActive)bs.runStamina=Math.max(0,(bs.runStamina||0)-STAMINA_PER_HIT);
         const tag=bs.playerGuarding?` (guarded -60%)`:'';
         battleLog(`💥 ${mob.name} unleashes ${tg?.effect?.split(' — ')[0]||'HEAVY ATTACK'} for ${mobDmg}${tag}${bs.runActive?` (−${STAMINA_PER_HIT} stamina)`:''}!`,"mob-hit");
@@ -11846,6 +12123,8 @@ async function _doMobAttackInner(bs,mob,pStats){
   if(dodged){
     battleLog(`💨 You dodged ${mob.name}'s attack!`,"reward");
     showBattleDmg("player-side","DODGE","#f0c040");
+    // Rogue Evasive Instinct (ro_c2): prime a crit boost for the next attack.
+    if(getActiveClass()==="rogue"&&getTalentRank("ro_c2")>0)bs.dodgePrimed=true;
   } else if(mobMisses){
     battleLog(`${mob.name} missed!`,"");
   } else if(bs.surgeAbsorb){
@@ -11883,7 +12162,11 @@ async function _doMobAttackInner(bs,mob,pStats){
       bs.playerDmgReduceTurns--;
     }
     if((bs.mobAtkDebuffTurns||0)>0)bs.mobAtkDebuffTurns--;
+    mobDmg=absorbWithShield(bs,mobDmg);
+    const _hpBeforeHit=bs.hp;
     bs.hp=Math.max(0,bs.hp-mobDmg);
+    if(mobDmg>0)bs.cleanTurns=0; // took damage — Momentum resets
+    maybeSecondWind(bs,pStats,_hpBeforeHit);
     playSound('hurt');
     if(_critTaken){
       if(bs.runActive)bs.runStamina=Math.max(0,(bs.runStamina||0)-STAMINA_PER_CRIT);
@@ -11906,7 +12189,15 @@ async function _doMobAttackInner(bs,mob,pStats){
   // / Rogue Backstab. Ticks here so it lands as the round closes, after the
   // monster has acted, rather than on the player's next button press.
   if(bs.bleedTurns>0){
-    const bleedDmg=Math.round(bs.bleedDmg*(pStats.bleedBonus||1));
+    let bleedDmg=Math.round(bs.bleedDmg*(pStats.bleedBonus||1));
+    // Hunter Festering Wounds (ar_c1): scale by distinct DoTs on the target.
+    if(getActiveClass()==="artisan"){
+      const fr=getTalentRank("ar_c1");
+      if(fr>0){
+        const distinct=((bs.mobBurnTurns||0)>0?1:0)+((bs.mobPoisonTurns||0)>0?1:0)+((bs.bleedTurns||0)>0?1:0);
+        if(distinct>0)bleedDmg=Math.round(bleedDmg*(1+0.08*fr*distinct));
+      }
+    }
     bs.mobHp=Math.max(0,bs.mobHp-bleedDmg);
     bs.bleedTurns--;
     battleLog(`🩸 Bleed: ${mob.name} takes ${bleedDmg} damage (${bs.bleedTurns} turns left).`,"player-hit");
@@ -11919,6 +12210,14 @@ async function _doMobAttackInner(bs,mob,pStats){
       return;
     }
   }
+
+  // Warrior Momentum: if the player ended this mob turn at the same or higher HP
+  // (no net damage taken), the clean-turn streak builds. Any damage above already
+  // reset it to 0 at the hit site.
+  const _hpNow=(bs.hp==null)?pStats.maxHp:bs.hp;
+  if(_hpNow>=_hpAtTurnStart)bs.cleanTurns=(bs.cleanTurns||0)+1;
+  // Monk Meditative Calm (mk_c5): 2 consecutive clean turns ready a free skill.
+  if(getActiveClass()==="monk"&&getTalentRank("mk_c5")>0&&(bs.cleanTurns||0)>=2){bs._calmReady=true;}
 }
 
 // ── PLAYER DEATH HANDLER — offers rest tokens ────────────────────────────
@@ -12345,13 +12644,11 @@ if(!S.dungeonRuns)S.dungeonRuns={date:"",count:0};
     // Higher zones unlock higher-tier failstack scrolls. Elites boost the chance.
     const fsChance=(isElite?0.10:0.05);
     if(Math.random()<fsChance){
-      // Tier pool by zone: z1-2 →[10], z3-4 →[10,20], z5-6 →[20,30], z7-8 →[30,40], z9+ →[40,50]
+      // Scroll pool by zone (equal odds): z1-2 →10/20/30, z3-4 →10/20/30/40, z5+ →10/20/30/40/50
       let pool;
-      if(z<=2)pool=[10];
-      else if(z<=4)pool=[10,20];
-      else if(z<=6)pool=[20,30];
-      else if(z<=8)pool=[30,40];
-      else pool=[40,50];
+      if(z<=2)pool=[10,20,30];
+      else if(z<=4)pool=[10,20,30,40];
+      else pool=[10,20,30,40,50];
       const amt=pool[Math.floor(Math.random()*pool.length)];
       S.failstackScrolls.push(amt);
       drops.push({emoji:"🎯",text:`Failstack Scroll +${amt}`,sub:"saved for big upgrades",color:"#80c0ff"});
@@ -12372,6 +12669,11 @@ if(!S.dungeonRuns)S.dungeonRuns={date:"",count:0};
   bs.mobId=nextMob.id;
   bs.isElite=(nextMob.id||"").startsWith("boss_")?false:Math.random()<ELITE_CHANCE;
   bs.mobHp=getMobObj(bs).maxHp;
+  bs.cleanTurns=0; bs.secondWindUsed=false; // fresh fight — reset Warrior conditionals
+  bs.focusTurns=0; bs.focusTarget=null; bs.trapPrimed=false; // Hunter
+  bs.killBuffTurns=0; bs.dodgePrimed=false; // Rogue
+  bs.arcaneStacks=0; // Sage
+  bs.overshield=0; bs._calmReady=false; bs.calmTurns=0; // Monk (shield does NOT persist between mobs)
 
   // ── Check for level-up & full heal ────────────────────────────────────
   await maybeBattleLevelUp(bs);
@@ -12695,29 +12997,7 @@ window.battleSlam=function(){doBattleAction("slam");};
 window.battleUseSkill=function(){doBattleAction("skill");};
 window.battleUseSkillById=function(id){doBattleAction("skill:"+id);};
 
-// ── REST TOKEN — revive after death ──────────────────────────────────────
-window.battleUseRestToken=function(){
-  refreshRestTokens();
-  if((S.combatRestTokens?.count||0)<=0){
-    toast("No Rest Tokens","Tokens reset at midnight.");
-    return;
-  }
-  const bs=initBattleState();
-  if(bs.hp>0){toast("","You're not defeated.");return;}
-  S.combatRestTokens.count--;
-  const pStats=getBattlePlayerStats();
-  bs.hp=Math.round(pStats.maxHp*0.5);
-  bs.wounded=false;
-  bs.combatLocked=false;
-  bs.runActive=true; bs.runKills=0; bs.runStartLevel=S.level; bs.runStamina=RUN_STAMINA_MAX; // revive = brand-new run
-  // Spawn a fresh regular mob in current zone (boss path was already reset on death)
-  const mob=pickMobForZone(bs.zone);
-  bs.mobId=mob.id;bs.mobHp=getMobObj(bs).maxHp;
-  battleLog(`✨ Rest Token used. Recovered 50% HP. ${S.combatRestTokens.count} remaining today.`,"reward");
-  showBattleDmg("player-side","+"+Math.round(pStats.maxHp*0.5),"#80f0a0");
-  save();render();
-};
-// Leave the death screen after a run has ended (with or without tokens). The run
+// Leave the death screen after a run has ended. The run
 // is already over and banked, so we heal to full and drop back to the staging /
 // Vigor screen — this is NOT a revive of the dead run, it just unblocks starting
 // a NEW run if the player still has Vigor. Fixes the dead-end where an out-of-
@@ -12743,10 +13023,10 @@ window.battleContinue=function(){
 };
 window.battleUsePotion=function(type){
   const bs=initBattleState();
-  // Can't drink your way out of death — the run already ended. Revive is the
-  // Rest Token's job. (Prevents healing above 0 AFTER death has been resolved,
+  // Can't drink your way out of death — the run already ended.
+  // (Prevents healing above 0 AFTER death has been resolved,
   // which used to leave you alive on a finished run, then bounce to the vigor screen.)
-  if(bs.hp<=0){ toast("You're defeated","Potions can't revive you — use a Rest Token, or head back to quests."); return; }
+  if(bs.hp<=0){ toast("You're defeated","Potions can't revive you — head back to camp or your quests."); return; }
   if(bs.combatLocked||bs.pendingMobSummary)return;
   if(!S.potions)S.potions={small:0,large:0};
   const healMult=getHealMult(bs,"player");
@@ -12940,9 +13220,6 @@ function renderBattle(){
       const fleeOnCooldown=fleeSecsLeft>0;
       const fleeLabel=fleeOnCooldown?`⏳ ${Math.floor(fleeSecsLeft/60)}m ${fleeSecsLeft%60}s`:"🏃 Flee";
 
-      // Refresh and read rest tokens
-      refreshRestTokens();
-      const restTokens=(S.combatRestTokens?.count||0);
       const runsBanked=Math.floor(Math.max(0,(S.vigor||0))/VIGOR_PER_RUN);
       const vigorReady=runsBanked>=1;
 
@@ -12950,16 +13227,9 @@ function renderBattle(){
       <div style="text-align:center;padding:18px 14px;margin-bottom:10px;background:#180808;border-radius:14px;border:1px solid #d04040">
         <div style="font-size:20px;font-weight:800;color:#e05050;margin-bottom:6px">💀 Defeated</div>
         <div style="font-size:11px;color:#a06060;margin-bottom:14px">You died at the hands of ${mob.name}.</div>
-        ${restTokens>0?`
-        <button onclick="battleUseRestToken()" class="battle-btn" style="width:100%;padding:14px;background:linear-gradient(135deg,#1a3a1a,#0a1f0a);border:2px solid #60d080;color:#80f0a0;font-size:14px;font-weight:800;margin-bottom:8px;animation:shieldPulse 1.2s ease infinite alternate">
-          ✨ Use Rest Token — Recover 50% HP
-        </button>
-        <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">${restTokens} Rest Token${restTokens>1?"s":""} left today · Resets at midnight</div>
-        `:`
         <div style="padding:10px;background:#1a1410;border-radius:10px;border:1px solid #604030;margin-bottom:12px">
-          <div style="font-size:11px;color:#a08060;line-height:1.5">No Rest Tokens left — they reset at midnight. Your haul this run is already banked. If you have Vigor, head back to camp and start a fresh run.</div>
+          <div style="font-size:11px;color:#a08060;line-height:1.5">Your haul this run is already banked. If you have Vigor, head back to camp and start a fresh run.</div>
         </div>
-        `}
         <button onclick="battleReturnToCamp()" class="battle-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#2a2208,#1a1404);border:2px solid #f0c040;color:#ffe080;font-size:14px;font-weight:800;margin-bottom:8px">⛺ Back to Camp${vigorReady?` — ${runsBanked} run${runsBanked===1?"":"s"} ready`:""}</button>
         <button onclick="QTAB='dailies';go('quests')" class="battle-btn" style="width:100%;background:var(--bg2);color:var(--text-muted);border-color:var(--card-border);font-size:12px">Back to quests →</button>
       </div>`;
@@ -12995,7 +13265,6 @@ function renderBattle(){
 
       // (Boss gauntlet removed — bosses now live only in dungeons.)
 
-      // Rest token display
       const _stam=Math.max(0,Math.round(bs.runStamina||0));
       const _stamPct=Math.min(100,Math.round(_stam/RUN_STAMINA_MAX*100));
       const _stamLow=_stam<=20;
@@ -13008,17 +13277,10 @@ function renderBattle(){
           </div>
           <div style="height:8px;border-radius:6px;background:#1a160c;border:1px solid ${_stamColor}40;overflow:hidden"><div style="height:100%;width:${_stamPct}%;background:${_stamColor};${_stamLow?'animation:shieldPulse 0.8s ease infinite alternate;':''}transition:width .3s ease"></div></div>
         </div>`;
-      const restTokenDisplay=`
-        <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:8px;padding:4px 8px;background:var(--bg2);border-radius:8px;border:1px solid var(--card-border)">
-          <span style="font-size:10px;color:var(--text-dim);font-weight:700;letter-spacing:.5px;text-transform:uppercase">Rest Tokens</span>
-          ${[0,1].map(i=>`<span style="font-size:14px">${i<restTokens?"✨":"⚪"}</span>`).join("")}
-          <span style="font-size:10px;color:var(--text-dim);margin-left:2px">${restTokens}/2</span>
-        </div>`;
 
       return`
       ${telegraphBanner}
       ${staminaDisplay}
-      ${restTokenDisplay}
       ${(()=>{
         const slamVar=CLASS_SLAM_VARIANTS[fantasyKey]||CLASS_SLAM_VARIANTS.warrior;
         const kit=getCombatKit(fantasyKey);
@@ -13990,6 +14252,9 @@ function renderEnhancePanel(itemId){
   const scrolls=S.scrolls||0;
   const anim=S._enhanceAnim;
   const res=S._enhanceResult;
+  const dur=getDurability(itemId);
+  const durPct=Math.round(dur/DURABILITY_MAX*100);
+  const durColor=dur<=0?"#e05050":dur<=20?"#f0a030":dur<=50?"#e8d060":"#60d080";
   const willDowngrade=lvl>16; // downgrade only above I — reaching PRI (+16) is permanent
 
   const statRows=Object.keys(_bs).map(k=>{
@@ -14048,6 +14313,14 @@ function renderEnhancePanel(itemId){
     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px">
       <span style="color:var(--text-dim)">Success: <span style="color:var(--gold);font-weight:800">${Math.round(chance*100)}%</span></span>
       <span style="color:var(--text-dim)">Failstacks: <span style="color:${fs>0?"#80c0ff":"var(--text-muted)"};font-weight:800">${fs}</span></span>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
+        <span style="color:var(--text-dim)">Durability</span>
+        <span style="color:${durColor};font-weight:800">${dur} / ${DURABILITY_MAX}${!maxed?` <span style="color:var(--text-dim);font-weight:600">· −${DURABILITY_LOSS} on fail</span>`:""}</span>
+      </div>
+      <div style="height:8px;border-radius:6px;background:var(--bg);border:1px solid var(--card-border);overflow:hidden"><div style="height:100%;width:${durPct}%;background:${durColor};${dur<=20?"animation:shieldPulse 0.9s ease infinite alternate;":""}transition:width .3s ease"></div></div>
+      ${dur<=0?`<div style="font-size:10px;color:#e05050;text-align:center;margin-top:5px;font-weight:700">⚠ Broken — repair before you can enhance</div>`:(!maxed&&dur<=DURABILITY_LOSS?`<div style="font-size:10px;color:#f0a030;text-align:center;margin-top:5px;font-weight:700">⚠ One more failure will break this item</div>`:"")}
     </div>
     ${willDowngrade?`<div style="font-size:10px;color:#c87070;text-align:center;margin-bottom:12px">⚠ Failure at ${curLabel} drops it to ${enhanceLabel(lvl-1)}</div>`:(lvl>=15?`<div style="font-size:10px;color:var(--text-dim);text-align:center;margin-bottom:12px">Safe — failure can't lower this item (I is permanent)</div>`:`<div style="font-size:10px;color:var(--text-dim);text-align:center;margin-bottom:12px">Safe — failure only builds a failstack</div>`)}
     <button onclick="doEnhance('${item.id}')" ${(anim||scrolls<1)?"disabled":""} style="width:100%;padding:14px;font-size:15px;font-family:'Nunito',sans-serif;border-radius:14px;border:1px solid var(--gold);background:${(anim||scrolls<1)?"var(--bg2)":"linear-gradient(135deg,#3a2800,#1a1200)"};color:${scrolls<1?"var(--text-dim)":"var(--gold)"};cursor:${(anim||scrolls<1)?"default":"pointer"};font-weight:800">
@@ -16138,13 +16411,18 @@ async function loadLeaderboard(){
   }
   ARENA.loading=true;ARENA.error="";render();
   try{
-    const snap=await db.collection("players")
+    // Race the Firestore read against a hard timeout. On some devices/networks the
+    // get() promise can hang indefinitely (e.g. missing composite index, flaky
+    // connection); without this race the Arena tab would freeze waiting on it.
+    const query=db.collection("players")
       .orderBy("level","desc").orderBy("gearScore","desc").limit(50).get();
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),6000));
+    const snap=await Promise.race([query,timeout]);
     const real=snap.docs.map(d=>({id:d.id,...d.data()}));
     ARENA.leaderboard=mergeSort(real);
     ARENA.loading=false;render();
   }catch(e){
-    // On failure, still present the ghost ladder rather than an empty board.
+    // On failure or timeout, still present the ghost ladder rather than an empty board.
     ARENA.leaderboard=mergeSort([]);
     ARENA.loading=false;ARENA.error="";render();
   }
@@ -16178,12 +16456,12 @@ const NPC_NAMES=[
 ];
 
 function dungeonRunsLeft(){
-  const today=new Date().toDateString();
+  const today=logicalNow().toDateString();
   if(!S.dungeonRuns||S.dungeonRuns.date!==today){return DUNGEON_DAILY_LIMIT;}
   return Math.max(0,DUNGEON_DAILY_LIMIT-(S.dungeonRuns.count||0));
 }
 function consumeDungeonRun(){
-  const today=new Date().toDateString();
+  const today=logicalNow().toDateString();
   if(!S.dungeonRuns||S.dungeonRuns.date!==today)S.dungeonRuns={date:today,count:0};
   S.dungeonRuns.count=(S.dungeonRuns.count||0)+1;
 }
@@ -16474,11 +16752,11 @@ function todaysDailyDungeon(){
 }
 
 function dailyDungeonDoneToday(){
-  const today=new Date().toDateString();
+  const today=logicalNow().toDateString();
   return !!(S.dailyDungeonRun&&S.dailyDungeonRun.date===today&&S.dailyDungeonRun.done);
 }
 function consumeDailyDungeonRun(){
-  const today=new Date().toDateString();
+  const today=logicalNow().toDateString();
   S.dailyDungeonRun={date:today,done:true};
 }
 
@@ -16530,7 +16808,7 @@ window.startDailyDungeon=function(){
   DUNGEON={
     zone,party,packs,boss,partyPower,
     isDaily:true, dailyTheme:theme,
-    stage:0,onBoss:false,round:0,log:[],locked:false,result:null,tauntTurns:0,
+    stage:0,onBoss:false,round:0,log:[],locked:false,result:null,tauntTurns:0,auto:false,
     rewards:{xp:0,gear:[],scrolls:0,failstackScrolls:[],mats:[]},
   };
   consumeDailyDungeonRun();
@@ -16555,6 +16833,7 @@ window.startDungeon=function(zone){
     locked:false,
     result:null,        // 'win' | 'wipe'
     tauntTurns:0,       // rounds the tank holds 100% aggro
+    auto:false,         // auto-battle toggle (off each run)
     rewards:{xp:0,gear:[],scrolls:0,failstackScrolls:[],mats:[]},
   };
   consumeDungeonRun();
@@ -16703,6 +16982,60 @@ window.dungeonAction=async function(action){
       render();
     }
   }
+  // If auto-battle is on and the run is still live, queue the next action.
+  dungeonAutoTick();
+};
+
+// ── AUTO-BATTLE ────────────────────────────────────────────────────────────
+// Drives the player's turns automatically by calling the SAME dungeonAction
+// the buttons use — so skills, mana, cooldowns, threat, and loot all behave
+// identically to manual play. The existing turn-lock prevents overlap.
+function dungeonAutoChooseAction(me){
+  const cur=me.resource||0;
+  // 1) Emergency potion: low HP and a potion on hand.
+  if(me.hp/me.maxHp<=0.35){
+    if((S.potions?.large||0)>0)return"potion:large";
+    if((S.potions?.small||0)>0)return"potion:small";
+  }
+  // 2) Affordable, off-cooldown equipped skill.
+  const skills=getEquippedSkills();
+  const usable=skills.filter(sk=>(me.skillCooldowns[sk.id]||0)<=0 && cur>=getSkillManaCost(me.cls,sk));
+  if(usable.length){
+    // Healer-style skills only matter if someone's hurt; otherwise pick the priciest (strongest).
+    const anyHurt=dungeonAliveParty().some(p=>p.hp<p.maxHp*0.7);
+    const healSk=usable.find(s=>["shield","mend","surge"].includes(s.effect));
+    if(healSk&&anyHurt&&me.role==="healer")return"skill:"+healSk.id;
+    const dmg=usable.slice().sort((a,b)=>getSkillManaCost(me.cls,b)-getSkillManaCost(me.cls,a));
+    return"skill:"+dmg[0].id;
+  }
+  // 3) Slam if affordable (spends built-up resource for a strong hit).
+  if(cur>=DG_SLAM_COST)return"slam";
+  // 4) Fall back to a basic attack (also builds resource).
+  return"attack";
+}
+
+function dungeonAutoTick(){
+  if(!DUNGEON||!DUNGEON.auto||DUNGEON.result)return;
+  const me=DUNGEON.party.find(p=>p.isPlayer);
+  if(!me||!me.alive){DUNGEON.auto=false;render();return;} // can't act while downed — stop auto
+  if(DUNGEON.locked)return; // a turn is already resolving; it will re-tick on completion
+  if(!dungeonAliveMobs().length)return; // mid-transition between packs; resolver will continue
+  const delay=S.skipEnhanceAnim?180:620; // brief pause so the round animates
+  setTimeout(()=>{
+    if(!DUNGEON||!DUNGEON.auto||DUNGEON.result||DUNGEON.locked)return;
+    const meNow=DUNGEON.party.find(p=>p.isPlayer);
+    if(!meNow||!meNow.alive){DUNGEON.auto=false;render();return;}
+    const act=dungeonAutoChooseAction(meNow);
+    if(act.startsWith("potion:")){dgUsePotion(act.split(":")[1]);dungeonAutoTick();}
+    else dungeonAction(act);
+  },delay);
+}
+
+window.toggleDungeonAuto=function(){
+  if(!DUNGEON||DUNGEON.result)return;
+  DUNGEON.auto=!DUNGEON.auto;
+  render();
+  if(DUNGEON.auto)dungeonAutoTick();
 };
 
 // Resolve a single party member's action (player explicit, NPC auto-chosen)
@@ -17359,7 +17692,8 @@ async function grantDungeonRewards(isBoss){
   // Failstack scroll (boss only, rare)
   if(isBoss&&Math.random()<0.4){
     if(!Array.isArray(S.failstackScrolls))S.failstackScrolls=[];
-    const pool=zone<=2?[10,20]:zone<=4?[20,30]:[30,40];
+    // Same zone pools as open-world (equal odds): z1-2 →10/20/30, z3-4 →10/20/30/40, z5+ →10/20/30/40/50
+    const pool=zone<=2?[10,20,30]:zone<=4?[10,20,30,40]:[10,20,30,40,50];
     const amt=pool[Math.floor(Math.random()*pool.length)];
     S.failstackScrolls.push(amt);
     DUNGEON.rewards.failstackScrolls.push(amt);
@@ -17563,6 +17897,12 @@ function renderDungeonActions(){
   const cl=CLASSES[me.cls]||{};
   const cur=me.resource||0;
 
+  // Auto-battle toggle — drives turns automatically (long runs can drag).
+  const auto=!!DUNGEON.auto;
+  const autoBtn=`<button onclick="toggleDungeonAuto()" class="battle-btn" style="width:100%;margin-bottom:10px;border-color:${auto?'#60d080':'var(--card-border)'};background:${auto?'linear-gradient(135deg,#0e2416,#0a1a10)':'var(--bg2)'};color:${auto?'#80f0a0':'var(--text-muted)'};font-size:12px;font-weight:800;${auto?'animation:shieldPulse 1.4s ease infinite alternate;':''}">
+    ${auto?'⏸ Auto-Battle ON — tap to take over':'▶ Auto-Battle'}
+  </button>`;
+
   // Styled resource bar (matches PvE)
   const resPct=Math.round(cur/rdef.max*100);
   const resBar=`<div style="margin-bottom:10px">
@@ -17617,7 +17957,7 @@ function renderDungeonActions(){
     <button onclick="dgUsePotion('large')" ${((S.potions?.large||0)===0||locked)?"disabled":""} class="battle-btn" style="flex:1;border-color:${(S.potions?.large||0)>0?'#60b0ff':'var(--card-border)'};background:var(--bg2);color:${(S.potions?.large||0)>0?'#60b0ff':'var(--text-dim)'}">💊×${S.potions?.large||0}</button>
   </div>`;
 
-  return resBar+primaryRow+skillRow+potionRow;
+  return autoBtn+resBar+primaryRow+skillRow+potionRow;
 }
 
 // Potion use inside a dungeon (heals the player member, consumes from inventory)
@@ -18436,7 +18776,7 @@ function renderArenaLeaderboard(){
       const challBtn=`<button onclick='startArenaFight(${JSON.stringify(JSON.stringify(p))})' class="btn" style="font-size:10px;padding:4px 10px;margin-top:3px;border-color:${pcl.color};color:${pcl.color}">\u2694\uFE0F Challenge</button>`;
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${isSelf?cl.color+"14":"var(--bg2)"};border-radius:12px;margin-bottom:6px;border:1px solid ${isSelf?cl.color+"50":"var(--card-border)"}">
         <div style="font-size:${i<3?16:12}px;font-weight:800;color:var(--text-muted);min-width:24px;text-align:center">${medal}</div>
-        <img src="${portrait}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">
+        <img src="${portrait}" loading="lazy" decoding="async" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:${isSelf?cl.color:"var(--text)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${isSelf?" \uD83D\uDFE1":""}</div>
           <div style="font-size:10px;color:${pcl.color}">Lv.${p.level} ${pcl.name}${wl?" \u00B7 "+wl:""} \u00B7 GS ${p.gearScore||0}</div>
@@ -18788,7 +19128,6 @@ if(S.battleState.mobIntentTurns===undefined)S.battleState.mobIntentTurns=0;
 if(S.battleState.playerGuarding===undefined)S.battleState.playerGuarding=false;
 if(S.battleState.playerSlamDebuff===undefined)S.battleState.playerSlamDebuff=0;
 if(S.battleState.resource===undefined)S.battleState.resource=0;
-if(!S.combatRestTokens)S.combatRestTokens={count:2,resetDate:null};
 if(!S.craftingMaterials)S.craftingMaterials={};
 if(S.battleState.fleeCooldownUntil===undefined)S.battleState.fleeCooldownUntil=0;
 // ── Run-system migrations (death-stakes / retreat / anti-bail) ──
