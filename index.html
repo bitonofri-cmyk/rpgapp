@@ -16344,6 +16344,21 @@ function arenaLaunchTime(){
 // Stable pseudo-random from an integer seed (no Date — identities never change).
 function _ghRand(seed){ let x=Math.sin(seed*127.1+311.7)*43758.5453; return x-Math.floor(x); }
 
+// Ghost display names — defined before generateArenaGhosts so it is never
+// referenced in the temporal dead zone (was causing an Arena freeze on some devices).
+const NPC_NAMES=[
+  "Leeroy","Zezima","Angwe","TheOldNite","Fansy","Kungen","Athene","Swifty","LordBritish","Rainz",
+  "Indalamar","Drakedog","Vurtne","Reckful","Laintime","Thott","Furor","Tigole","Woox","B0aty",
+  "Neilyo","Hydra","Pat","Grim","Mute","ProcMeMaybe","LeeroyAgain","EdgarAllanPwn","HarryDotter","DoraTheDestroyer",
+  "CampMeImFamous","FrodoTaggins","CritMeAmadeus","ShiftHappens","BearGrills","HolyCow","Bullshift","LazerChicken","CatDuridIs4Fite","Cameltosis",
+  "WillFeral","GankSinatra","Cleavage","BowFlex","WreckingBaull","TotalHealer","BinLootin","HealBop","Onyxia","FelMeMaybe",
+  "xXxSephirothxXx","Legolol","Drizzt","Kirito","Asuna","LoneWolf","ShadowStep","Backstabber","SoulReaper","Nightfall",
+  "DoomBringer","DarkKnight","Bloodseeker","DeathKnight","Omnislash","BladeMaster","SwiftStrike","IronShield","Goku","Naruto",
+  "Healbot","TankYou","FaceMelter","RotAndRun","MindFlayer","DotAndKite","ShadowWordPwn","Dispersion","BubbleHearth","PewPew",
+  "ManaTide","Fireball","IceBlock","ShadowMage","Roflcopter","NinjaLooter","Salty","TheSlayer","Pwned","Owned",
+  "GetGood","Scrub","NoobSlayer","AFK","Disconnected","Unknown","Nameless","Untitled","PlayerOne","MainCharacter",
+];
+
 function generateArenaGhosts(){
   const daysElapsed=Math.max(0, Math.floor((Date.now()-arenaLaunchTime())/(1000*60*60*24)));
   const classes=["warrior","sage","rogue","artisan","monk"];
@@ -16442,18 +16457,6 @@ const DPS_CLASSES=["sage","rogue","artisan"];
 
 // ~100 iconic MMORPG-style player handles (option A: real-figure names swapped for
 // same-spirit puns/tropes). Casing kept intentionally messy to read like real handles.
-const NPC_NAMES=[
-  "Leeroy","Zezima","Angwe","TheOldNite","Fansy","Kungen","Athene","Swifty","LordBritish","Rainz",
-  "Indalamar","Drakedog","Vurtne","Reckful","Laintime","Thott","Furor","Tigole","Woox","B0aty",
-  "Neilyo","Hydra","Pat","Grim","Mute","ProcMeMaybe","LeeroyAgain","EdgarAllanPwn","HarryDotter","DoraTheDestroyer",
-  "CampMeImFamous","FrodoTaggins","CritMeAmadeus","ShiftHappens","BearGrills","HolyCow","Bullshift","LazerChicken","CatDuridIs4Fite","Cameltosis",
-  "WillFeral","GankSinatra","Cleavage","BowFlex","WreckingBaull","TotalHealer","BinLootin","HealBop","Onyxia","FelMeMaybe",
-  "xXxSephirothxXx","Legolol","Drizzt","Kirito","Asuna","LoneWolf","ShadowStep","Backstabber","SoulReaper","Nightfall",
-  "DoomBringer","DarkKnight","Bloodseeker","DeathKnight","Omnislash","BladeMaster","SwiftStrike","IronShield","Goku","Naruto",
-  "Healbot","TankYou","FaceMelter","RotAndRun","MindFlayer","DotAndKite","ShadowWordPwn","Dispersion","BubbleHearth","PewPew",
-  "ManaTide","Fireball","IceBlock","ShadowMage","Roflcopter","NinjaLooter","Salty","TheSlayer","Pwned","Owned",
-  "GetGood","Scrub","NoobSlayer","AFK","Disconnected","Unknown","Nameless","Untitled","PlayerOne","MainCharacter",
-];
 
 function dungeonRunsLeft(){
   const today=logicalNow().toDateString();
