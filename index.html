@@ -18769,17 +18769,32 @@ function renderArenaLeaderboard(){
   } else if(!ARENA.leaderboard.length){
     boardHtml=`<div style="text-align:center;padding:30px;color:var(--text-dim)"><div style="font-size:28px;margin-bottom:8px">\uD83C\uDFC6</div><div>No players yet — be the first!</div></div>`;
   } else {
-    boardHtml=ARENA.leaderboard.map((p,i)=>{
+    // Each portrait's base64 is ~10-15KB. Inlining it in all 50 rows' <img src>
+    // built a ~575KB HTML string that froze slower devices (iPhone 11) for a few
+    // seconds on entry. Instead, emit each UNIQUE portrait ONCE as a CSS class and
+    // reference it by class in every row — turns ~575KB into ~110KB and avoids
+    // decoding the same image 50×. Only the portraits actually on the board are emitted.
+    const usedPortraits={};
+    ARENA.leaderboard.forEach(p=>{
+      const pc=(p.fantasyClass||p.playerClass||"warrior")+"_"+(p.gender||"male");
+      if(!usedPortraits[pc]){
+        usedPortraits[pc]=CLASS_PORTRAITS[pc]||CLASS_PORTRAITS["warrior_male"];
+      }
+    });
+    const portraitCss=`<style>${Object.keys(usedPortraits).map(k=>
+      `.apx-${k}{background-image:url('${usedPortraits[k]}')}`).join("")}</style>`;
+
+    boardHtml=portraitCss+ARENA.leaderboard.map((p,i)=>{
       const isSelf=p.id===myId;
       const pcls=p.fantasyClass||p.playerClass||"warrior";
       const pcl=CLASSES[pcls]||CLASSES.warrior;
-      const portrait=CLASS_PORTRAITS[pcls+"_"+(p.gender||"male")]||CLASS_PORTRAITS["warrior_male"];
+      const pkey=pcls+"_"+(p.gender||"male");
       const medal=i===0?"\uD83E\uDD47":i===1?"\uD83E\uDD48":i===2?"\uD83E\uDD49":`#${i+1}`;
       const wl=((p.wins||0)+(p.losses||0))>0?`${p.wins||0}W ${p.losses||0}L`:"";
       const challBtn=`<button onclick='startArenaFight(${JSON.stringify(JSON.stringify(p))})' class="btn" style="font-size:10px;padding:4px 10px;margin-top:3px;border-color:${pcl.color};color:${pcl.color}">\u2694\uFE0F Challenge</button>`;
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${isSelf?cl.color+"14":"var(--bg2)"};border-radius:12px;margin-bottom:6px;border:1px solid ${isSelf?cl.color+"50":"var(--card-border)"}">
         <div style="font-size:${i<3?16:12}px;font-weight:800;color:var(--text-muted);min-width:24px;text-align:center">${medal}</div>
-        <img src="${portrait}" loading="lazy" decoding="async" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">
+        <div class="apx-${pkey}" style="width:40px;height:40px;border-radius:8px;background-size:cover;background-position:center;flex-shrink:0"></div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:${isSelf?cl.color:"var(--text)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${isSelf?" \uD83D\uDFE1":""}</div>
           <div style="font-size:10px;color:${pcl.color}">Lv.${p.level} ${pcl.name}${wl?" \u00B7 "+wl:""} \u00B7 GS ${p.gearScore||0}</div>
