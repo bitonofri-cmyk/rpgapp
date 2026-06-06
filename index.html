@@ -16359,6 +16359,39 @@ const NPC_NAMES=[
   "GetGood","Scrub","NoobSlayer","AFK","Disconnected","Unknown","Nameless","Untitled","PlayerOne","MainCharacter",
 ];
 
+// Build a plausible stat + gear loadout for a ghost from its level and gearScore.
+// gearScore is the SUM of all stat points across gear (see getGearScore), so we
+// treat it as a pool to distribute: weapon gets the primary attack stat, armor
+// gets VIT (for HP/DEF) plus the rest. Base "intrinsic" stats grow gently with
+// level. The result feeds computeGhostStats -> scaling.getStats(), giving HP/ATK/
+// DEF that scale with rank, matching how a real player of that GS would feel.
+const _GH_PRIMARY={warrior:"STR",sage:"INT",rogue:"AGI",artisan:"AGI",monk:"WP"};
+function synthGhostBuild(cls,level,gearScore,seed){
+  const r=(k)=>_ghRand(seed*10+50+k);
+  const prim=_GH_PRIMARY[cls]||"STR";
+  // Intrinsic (non-gear) stats: modest, level-driven. Quests grant 0 stats in this
+  // game, so keep these small — power should come from the gear pool.
+  const baseVit=5+level*0.6;
+  const stats={STR:5,INT:5,VIT:Math.round(baseVit),WP:5,AGI:5};
+  stats[prim]=Math.max(stats[prim],Math.round(5+level*0.8));
+  // Distribute the gearScore pool. Weapon carries ~45% (loaded on primary stat),
+  // armor carries ~55% (VIT-heavy for survivability, with some primary spillover).
+  const pool=Math.max(0,Number(gearScore)||0);
+  const wPool=Math.round(pool*(0.40+r(1)*0.10));
+  const aPool=Math.max(0,pool-wPool);
+  const weapon={STR:0,INT:0,VIT:0,WP:0,AGI:0};
+  const armor ={STR:0,INT:0,VIT:0,WP:0,AGI:0};
+  // Weapon: mostly the primary attack stat, small secondary scatter.
+  weapon[prim]=Math.round(wPool*0.85);
+  weapon.STR +=Math.round(wPool*0.15*r(2));
+  weapon[prim]=weapon[prim]||0;
+  // Armor: VIT-dominant so HP/DEF scale, with the rest split into the primary.
+  armor.VIT=Math.round(aPool*0.62);
+  armor[prim]=(armor[prim]||0)+Math.round(aPool*0.28);
+  armor.WP +=Math.round(aPool*0.10*r(3));
+  return{stats,gearStats:{weapon,armor}};
+}
+
 function generateArenaGhosts(){
   const daysElapsed=Math.max(0, Math.floor((Date.now()-arenaLaunchTime())/(1000*60*60*24)));
   const classes=["warrior","sage","rogue","artisan","monk"];
@@ -16401,10 +16434,16 @@ function generateArenaGhosts(){
     const total=Math.min(2000, Math.round(8+daysElapsed*gamesPerDay));
     const wins=Math.round(total*skill), losses=Math.max(0,total-wins);
 
+    // Synthesize real combat stats from level + gearScore so ghosts scale with
+    // their rank (previously they had no stats → flat ~base-VIT HP regardless of
+    // level, making top-ranked ghosts trivially weak). Routes through the same
+    // getStats() path the player uses for full parity.
+    const{stats,gearStats}=synthGhostBuild(cls,level,gearScore,i);
     ghosts.push({
       id:"ghost_"+i,            // stable id — same person forever
       name, level, gearScore,
       playerClass:cls, gender,
+      stats, gearStats,
       wins, losses, _ghost:true
     });
   }
@@ -16418,7 +16457,7 @@ async function loadLeaderboard(){
   const mergeSort=(real)=>{
     // real players win ties and are never duplicated by a ghost
     const combined=[...real, ...ghosts.filter(g=>!real.some(r=>r.id===g.id))];
-    combined.sort((a,b)=>(b.level-a.level)||((b.gearScore||0)-(a.gearScore||0)));
+    combined.sort((a,b)=>((b.gearScore||0)-(a.gearScore||0))||(b.level-a.level));
     return combined.slice(0,50);
   };
   if(!db){ // offline — still show a populated ghost ladder
@@ -16430,7 +16469,7 @@ async function loadLeaderboard(){
     // get() promise can hang indefinitely (e.g. missing composite index, flaky
     // connection); without this race the Arena tab would freeze waiting on it.
     const query=db.collection("players")
-      .orderBy("level","desc").orderBy("gearScore","desc").limit(50).get();
+      .orderBy("gearScore","desc").orderBy("level","desc").limit(50).get();
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),6000));
     const snap=await Promise.race([query,timeout]);
     const real=snap.docs.map(d=>({id:d.id,...d.data()}));
