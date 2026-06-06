@@ -5231,6 +5231,11 @@ function assignFocusesFromAnswers(answers){
 const DAY_RESET_HOUR=0;
 function logicalNow(){const d=new Date();d.setHours(d.getHours()-DAY_RESET_HOUR);return d;}
 function today(){const d=logicalNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+// Resets happen TWICE per logical day: once at the day-rollover (midnight),
+// once at midday. periodKey() returns a distinct string for each half-day, so
+// anything keyed to it refreshes at both boundaries. AM half = "<date>#a",
+// PM half (logical hour >= 12) = "<date>#p".
+function periodKey(){const d=logicalNow();return today()+(d.getHours()>=12?"#p":"#a");}
 function getTierIndex(lvl){for(let i=TIERS.length-1;i>=0;i--){if(lvl>=TIERS[i].level)return i+1;}return 1;}
 function getTier(lvl){return TIERS[getTierIndex(lvl)-1];}
 // ── Time-of-day slot: gate quests that only make sense at a certain hour.
@@ -12348,7 +12353,7 @@ const VIGOR_PER_HABIT   = 15;  // earned per habit check-in
 // Top up to the daily floor once per calendar day (only ever RAISES, never cuts).
 function refreshVigorDailyFloor(){
   if(typeof S.vigor!=="number")S.vigor=VIGOR_DAILY_FLOOR;
-  const d=(typeof today==="function")?today():new Date().toISOString().slice(0,10);
+  const d=(typeof periodKey==="function")?periodKey():new Date().toISOString().slice(0,10);
   if(S.vigorFloorDate!==d){
     S.vigorFloorDate=d;
     if(S.vigor<VIGOR_DAILY_FLOOR)S.vigor=VIGOR_DAILY_FLOOR;
@@ -16591,13 +16596,13 @@ const DPS_CLASSES=["sage","rogue","artisan"];
 // same-spirit puns/tropes). Casing kept intentionally messy to read like real handles.
 
 function dungeonRunsLeft(){
-  const today=logicalNow().toDateString();
-  if(!S.dungeonRuns||S.dungeonRuns.date!==today){return DUNGEON_DAILY_LIMIT;}
+  const pk=periodKey();
+  if(!S.dungeonRuns||S.dungeonRuns.date!==pk){return DUNGEON_DAILY_LIMIT;}
   return Math.max(0,DUNGEON_DAILY_LIMIT-(S.dungeonRuns.count||0));
 }
 function consumeDungeonRun(){
-  const today=logicalNow().toDateString();
-  if(!S.dungeonRuns||S.dungeonRuns.date!==today)S.dungeonRuns={date:today,count:0};
+  const pk=periodKey();
+  if(!S.dungeonRuns||S.dungeonRuns.date!==pk)S.dungeonRuns={date:pk,count:0};
   S.dungeonRuns.count=(S.dungeonRuns.count||0)+1;
 }
 
@@ -16953,7 +16958,7 @@ window.startDailyDungeon=function(){
 };
 
 window.startDungeon=function(zone){
-  if(dungeonRunsLeft()<=0){toast("No runs left","You've done all 3 dungeon runs today. Come back tomorrow.");return;}
+  if(dungeonRunsLeft()<=0){toast("No runs left","You've used all 3 runs this window. They refresh at noon and midnight.");return;}
   const powerLevel=Math.max(1,S.level||1);
   const party=buildDungeonParty(powerLevel);
   // Scale mobs to the ACTUAL party power so it's hard-but-winnable at any level/gear.
@@ -17805,7 +17810,7 @@ function dungeonWipe(){
 // Rewards: XP, gear, scrolls — NO GOLD.
 async function grantDungeonRewards(isBoss){
   const zone=DUNGEON.zone;
-  const xp=isBoss?(96+zone*32):(24+zone*8);
+  const xp=isBoss?(10+zone*3):(3+zone*1);
   S.xp=(S.xp||0)+xp;
   DUNGEON.rewards.xp+=xp;
   // Scrolls
